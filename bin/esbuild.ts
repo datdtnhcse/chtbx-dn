@@ -5,9 +5,9 @@ await importMap.load(["./import_map.json"]);
 
 export const { port } = await esbuild.serve({
 	port: parseInt(Deno.env.get("FS_PORT")!),
-	servedir: "site",
+	servedir: "gui",
 }, {
-	entryPoints: ["./site/index.tsx"],
+	entryPoints: ["./gui/index.tsx"],
 	bundle: true,
 	format: "esm",
 	jsx: "automatic",
