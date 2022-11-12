@@ -22,10 +22,10 @@ socket.addEventListener("close", (e) => {
 });
 
 socket.addEventListener("message", (e) => {
-	console.log("Initiate", e.data);
 	const data = JSON.parse(e.data);
+	console.log("Initiate", data);
 	initializing.value = false;
-	username.value = data;
+	username.value = data.username;
 }, { once: true });
 
 export function send(req: LoginRequest): Promise<LoginResponse>;

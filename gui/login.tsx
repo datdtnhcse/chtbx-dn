@@ -1,15 +1,21 @@
 import { signal } from "@preact/signals";
+import { username } from "./state.ts";
 import { send } from "./websocket.ts";
 
 export default function Login() {
-	const username = signal("");
+	const inputUsername = signal("");
 	const password = signal("");
+	const status = signal("");
 	const submit = async () => {
-		await send({
+		const res = await send({
 			type: "login",
-			username: username.value,
+			username: inputUsername.value,
 			password: password.value,
 		});
+		if (res.status == "OK") {
+			username.value = inputUsername.value;
+		}
+		status.value = res.status;
 	};
 
 	return (
@@ -23,8 +29,8 @@ export default function Login() {
 				Username:
 				<input
 					type="text"
-					value={username}
-					onInput={(e) => username.value = e.currentTarget.value}
+					value={inputUsername}
+					onInput={(e) => inputUsername.value = e.currentTarget.value}
 				/>
 			</label>
 			<label>
@@ -36,6 +42,7 @@ export default function Login() {
 				/>
 			</label>
 			<button>Ok</button>
+			<p>{status}</p>
 		</form>
 	);
 }

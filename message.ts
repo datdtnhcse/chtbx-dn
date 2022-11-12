@@ -93,6 +93,20 @@ export class RequestDecoder extends Decoder {
 }
 
 export class ResponseDecoder extends Decoder {
+	async decode(): Promise<Response> {
+		const type = await this.byte();
+		if (isNaN(type)) {
+			throw new Error("EOF");
+		}
+
+		switch (type) {
+			case RequestType.LOGIN:
+				return this.login();
+		}
+
+		throw new Error(`unreachable type: ${type}`);
+	}
+
 	async login(): Promise<LoginResponse> {
 		const status = await this.byte();
 		return {
