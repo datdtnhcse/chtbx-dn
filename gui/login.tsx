@@ -4,13 +4,16 @@ import { send } from "./websocket.ts";
 
 export default function Login() {
 	const inputUsername = signal("");
-	const password = signal("");
+	const inputPassword = signal("");
+
+	// login status
 	const status = signal("");
-	const submit = async () => {
+
+	const login = async () => {
 		const res = await send({
 			type: "login",
 			username: inputUsername.value,
-			password: password.value,
+			password: inputPassword.value,
 		});
 		if (res.status == "OK") {
 			username.value = inputUsername.value;
@@ -19,12 +22,7 @@ export default function Login() {
 	};
 
 	return (
-		<form
-			onSubmit={(e) => {
-				e.preventDefault();
-				submit();
-			}}
-		>
+		<div>
 			<label>
 				Username:
 				<input
@@ -37,12 +35,12 @@ export default function Login() {
 				Password:
 				<input
 					type="password"
-					value={password}
-					onInput={(e) => password.value = e.currentTarget.value}
+					value={inputPassword}
+					onInput={(e) => inputPassword.value = e.currentTarget.value}
 				/>
 			</label>
-			<button>Ok</button>
+			<button onClick={login}>Đăng nhập</button>
 			<p>{status}</p>
-		</form>
+		</div>
 	);
 }
