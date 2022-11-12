@@ -41,6 +41,7 @@ export enum LoginStatus {
 	OK = 0,
 	USERNAME_NOT_EXIST = 1,
 	WRONG_PASSWORD = 2,
+	ALREADY_LOGGED_IN = 3,
 }
 
 class Decoder {

@@ -1,12 +1,16 @@
 import { render } from "preact";
+import Dash from "./dash.tsx";
 import Login from "./login.tsx";
-import { initializing } from "./state.ts";
+import { initializing, username } from "./state.ts";
 
 function App() {
 	if (initializing.value) {
 		return <h1>Loading...</h1>;
 	}
-	return <Login />;
+	if (username.value === null) {
+		return <Login />;
+	}
+	return <Dash />;
 }
 
 render(<App />, document.querySelector("#app") ?? document.body);
