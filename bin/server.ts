@@ -1,6 +1,10 @@
 import { LoginStatus, RequestDecoder, ResponseEncoder } from "../message.ts";
+import "./dotenv.ts";
 
-const listener = Deno.listen({ port: 1234, transport: "tcp" });
+const listener = Deno.listen({
+	port: parseInt(Deno.env.get("SERVER_PORT")!),
+	transport: "tcp",
+});
 
 for await (const conn of listener) {
 	handleConn(conn);

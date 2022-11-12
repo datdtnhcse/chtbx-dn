@@ -9,5 +9,9 @@
 			"indentWidth": 4,
 			"useTabs": true
 		}
+	},
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"jsxImportSource": "preact"
 	}
 }
