@@ -1,0 +1,13 @@
+{
+	"tasks": {
+		"client": "deno run -Ar bin/client.ts",
+		"server": "deno run -Ar bin/server.ts"
+	},
+	"importMap": "./import_map.json",
+	"fmt": {
+		"options": {
+			"indentWidth": 4,
+			"useTabs": true
+		}
+	}
+}
