@@ -1,12 +1,13 @@
 import "dotenv/load";
-import { findAccount, setIP } from "../db.ts";
+import { addAccount, findAccount, setIP } from "../db.ts";
 import {
 	LoginRequest,
 	LoginStatus,
+	RegisterRequest,
+	RegisterStatus,
 	RequestDecoder,
 	ResponseEncoder,
 } from "../message.ts";
-
 class Handler {
 	ip: string;
 	id: number | null;
@@ -29,11 +30,13 @@ class Handler {
 					case "login":
 						this.login(request);
 						break;
+					case "register":
+						this.register(request);
+						break;
 				}
 			}
 		} catch (e) {
 			console.error(e.message);
-
 			// if is logged in
 			if (this.id !== null) {
 				setIP.first({ id: this.id, ip: null });
@@ -70,14 +73,36 @@ class Handler {
 		setIP.first({ id: this.id, ip: this.ip });
 		this.encoder.login(LoginStatus.OK);
 	}
+	register(request: RegisterRequest) {
+		console.log(
+			"Someone register:",
+			request.username,
+			"with password:",
+			request.password,
+		);
+		const account = findAccount.firstEntry({
+			username: request.username,
+		});
+		if (account) {
+			console.log("username is exist");
+			this.encoder.register(RegisterStatus.USERNAME_IS_EXIST);
+			return;
+		}
+		addAccount.firstEntry({
+			username: request.username,
+			password: request.password,
+		});
+		this.encoder.register(RegisterStatus.OK);
+	}
 }
 
 const listener = Deno.listen({
 	port: parseInt(Deno.env.get("SERVER_PORT")!),
 	transport: "tcp",
 });
-
+console.log("server listen at", Deno.env.get("SERVER_PORT"));
 for await (const conn of listener) {
+	console.log("Client connect", conn.remoteAddr);
 	const handler = new Handler(conn);
 	handler.handle();
 }

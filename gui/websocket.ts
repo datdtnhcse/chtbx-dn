@@ -30,6 +30,7 @@ socket.addEventListener("message", (e) => {
 
 export function send(req: LoginRequest): Promise<LoginResponse>;
 export function send(req: RegisterRequest): Promise<RegisterResponse>;
+
 export async function send(req: unknown) {
 	return await new Promise((resolve) => {
 		socket.send(JSON.stringify(req));
