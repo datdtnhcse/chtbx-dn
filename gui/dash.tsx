@@ -1,4 +1,4 @@
-export default function Dash(): any {
+export default function Dash() {
 	return (
 		<ul>
 			<li>Đạt</li>
