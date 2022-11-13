@@ -63,7 +63,7 @@ async function handleRequest(socket: WebSocket, req: Request) {
 		const res = await decoder.decode();
 		if (res.type !== "register") throw "unreachable";
 
-		console.log("login status", res.status);
+		console.log("register status", res.status);
 		socket.send(JSON.stringify(res));
 		return;
 	}
