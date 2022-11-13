@@ -179,7 +179,7 @@ export class ResponseEncoder extends Encoder {
 	login(
 		status: LoginStatus,
 	) {
-		this.writer.write(new Uint8Array([RequestType.LOGIN, status]));
+		this.writer.write(new Uint8Array([ResponseType.LOGIN, status]));
 		this.writer.flush();
 	}
 	register(
