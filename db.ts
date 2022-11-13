@@ -22,7 +22,7 @@ export const findAccount = db.prepareQuery<
 export const addAccount = db.prepareQuery<
 	never,
 	never,
-	{ username: string; password: string | null }
+	{ username: string; password: string }
 >(
 	"INSERT INTO accounts(username, password) VALUES (:username, :password);",
 );
