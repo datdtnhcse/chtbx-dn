@@ -185,7 +185,7 @@ export class ResponseEncoder extends Encoder {
 	register(
 		status: RegisterStatus,
 	) {
-		this.writer.write(new Uint8Array([RequestType.REGISTER, status]));
+		this.writer.write(new Uint8Array([ResponseType.REGISTER, status]));
 		this.writer.flush();
 	}
 }
