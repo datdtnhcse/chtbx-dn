@@ -1,5 +1,5 @@
 import "dotenv/load";
-import { findAccount,addAccount, setIP } from "../db.ts";
+import { addAccount, findAccount, setIP } from "../db.ts";
 import {
 	LoginRequest,
 	LoginStatus,
@@ -32,7 +32,7 @@ class Handler {
 						break;
 					case "register":
 						this.register(request);
-                        break;
+						break;
 				}
 			}
 		} catch (e) {
@@ -90,7 +90,7 @@ class Handler {
 		}
 		addAccount.firstEntry({
 			username: request.username,
-			password: request.password
+			password: request.password,
 		});
 		this.encoder.register(RegisterStatus.OK);
 	}
@@ -100,7 +100,7 @@ const listener = Deno.listen({
 	port: parseInt(Deno.env.get("SERVER_PORT")!),
 	transport: "tcp",
 });
-console.log("server listen at",Deno.env.get("SERVER_PORT"));
+console.log("server listen at", Deno.env.get("SERVER_PORT"));
 for await (const conn of listener) {
 	console.log("Client connect", conn.remoteAddr);
 	const handler = new Handler(conn);

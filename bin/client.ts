@@ -3,7 +3,12 @@ import { serve } from "std/http/server.ts";
 import { Request, RequestEncoder, ResponseDecoder } from "../message.ts";
 import { port as esbuildPort } from "./esbuild.ts";
 
-console.log("Connect server",Deno.env.get("SERVER_HOST"),"at",Deno.env.get("SERVER_PORT"));
+console.log(
+	"Connect server",
+	Deno.env.get("SERVER_HOST"),
+	"at",
+	Deno.env.get("SERVER_PORT"),
+);
 const serverConn = await Deno.connect({
 	hostname: Deno.env.get("SERVER_HOST")!,
 	port: parseInt(Deno.env.get("SERVER_PORT")!),

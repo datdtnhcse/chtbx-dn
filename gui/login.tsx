@@ -3,15 +3,14 @@ import { username } from "./state.ts";
 import { send } from "./websocket.ts";
 import Register from "./register.tsx";
 
-
 export default function Login() {
 	const registersignal = useSignal("");
 	const inputUsername = useSignal("");
 	const inputPassword = useSignal("");
 	const status = useSignal("");
-	const toregister =  () => {
+	const toregister = () => {
 		registersignal.value = "OK";
-	}
+	};
 	const login = async () => {
 		const res = await send({
 			type: "login",
@@ -23,8 +22,8 @@ export default function Login() {
 		}
 		status.value = res.status;
 	};
-	
-	if (registersignal.value=="OK") {
+
+	if (registersignal.value == "OK") {
 		return <Register />;
 	}
 	return (
@@ -36,7 +35,7 @@ export default function Login() {
 					value={inputUsername}
 					onInput={(e) => inputUsername.value = e.currentTarget.value}
 				/>
-			</label> 
+			</label>
 			<p></p>
 			<label>
 				Password:

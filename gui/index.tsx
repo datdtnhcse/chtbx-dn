@@ -4,7 +4,6 @@ import Login from "./login.tsx";
 import Register from "./register.tsx";
 import { initializing, username } from "./state.ts";
 
-
 function App() {
 	if (initializing.value) {
 		return <h1>Loading...</h1>;
