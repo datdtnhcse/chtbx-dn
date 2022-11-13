@@ -15,8 +15,7 @@ export interface RegisterRequest {
 
 export interface RegisterResponse {
 	type: "register";
-	ok: boolean;
-	message?: "username exists";
+	status: keyof typeof RegisterStatus;
 }
 
 export interface LoginRequest {
@@ -32,6 +31,7 @@ export interface LoginResponse {
 
 export enum RequestType {
 	LOGIN = 0,
+	REGISTER = 1,
 }
 
 // alias for RequestType, the two are the same
@@ -42,6 +42,10 @@ export enum LoginStatus {
 	USERNAME_NOT_EXIST = 1,
 	WRONG_PASSWORD = 2,
 	ALREADY_LOGGED_IN = 3,
+}
+export enum RegisterStatus {
+	OK = 0,
+	USERNAME_IS_EXIST = 1,
 }
 
 class Decoder {
@@ -80,6 +84,8 @@ export class RequestDecoder extends Decoder {
 		switch (type) {
 			case RequestType.LOGIN:
 				return this.login();
+			case RequestType.REGISTER:
+				return this.register();
 		}
 
 		throw new Error(`unreachable type: ${type}`);
@@ -89,6 +95,11 @@ export class RequestDecoder extends Decoder {
 		const username = await this.lenStr();
 		const password = await this.lenStr();
 		return { type: "login", username, password };
+	}
+	async register(): Promise<RegisterRequest> {
+		const username = await this.lenStr();
+		const password = await this.lenStr();
+		return { type: "register", username, password };
 	}
 }
 
@@ -102,6 +113,8 @@ export class ResponseDecoder extends Decoder {
 		switch (type) {
 			case RequestType.LOGIN:
 				return this.login();
+			case RequestType.REGISTER:
+				return this.register();
 		}
 
 		throw new Error(`unreachable type: ${type}`);
@@ -112,6 +125,13 @@ export class ResponseDecoder extends Decoder {
 		return {
 			type: "login",
 			status: LoginStatus[status] as keyof typeof LoginStatus,
+		};
+	}
+	async register(): Promise<RegisterResponse> {
+		const status = await this.byte();
+		return {
+			type: "register",
+			status: RegisterStatus[status] as keyof typeof RegisterStatus,
 		};
 	}
 }
@@ -147,6 +167,12 @@ export class RequestEncoder extends Encoder {
 		this.lengthStr(password);
 		this.writer.flush();
 	}
+	register(username: string, password: string) {
+		this.writer.write(new Uint8Array([RequestType.REGISTER]));
+		this.lengthStr(username);
+		this.lengthStr(password);
+		this.writer.flush();
+	}
 }
 
 export class ResponseEncoder extends Encoder {
@@ -154,6 +180,12 @@ export class ResponseEncoder extends Encoder {
 		status: LoginStatus,
 	) {
 		this.writer.write(new Uint8Array([RequestType.LOGIN, status]));
+		this.writer.flush();
+	}
+	register(
+		status: RegisterStatus,
+	) {
+		this.writer.write(new Uint8Array([RequestType.REGISTER, status]));
 		this.writer.flush();
 	}
 }

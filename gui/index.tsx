@@ -1,7 +1,9 @@
 import { render } from "preact";
 import Dash from "./dash.tsx";
 import Login from "./login.tsx";
+import Register from "./register.tsx";
 import { initializing, username } from "./state.ts";
+
 
 function App() {
 	if (initializing.value) {

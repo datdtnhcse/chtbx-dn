@@ -19,6 +19,13 @@ export const findAccount = db.prepareQuery<
 >(
 	"SELECT id, username, password, ip FROM accounts WHERE username = :username;",
 );
+export const addAccount = db.prepareQuery<
+	never,
+	never,
+	{ username: string ; password: string | null}
+>(
+	"INSERT INTO accounts(username, password) VALUES (:username, :password);",
+);
 
 export const setIP = db.prepareQuery<
 	never,
