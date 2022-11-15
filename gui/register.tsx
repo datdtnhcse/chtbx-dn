@@ -1,7 +1,7 @@
 import { useSignal } from "@preact/signals";
 import { RegisterStatus, RequestType } from "../message.ts";
 import Login from "./login.tsx";
-import { request } from "./websocket.ts";
+import { clientServerSocket } from "./websocket.ts";
 
 export default function Register() {
 	const inputUsername = useSignal("");
@@ -16,7 +16,7 @@ export default function Register() {
 		if (inputComPassword.value != inputPassword.value) {
 			status.value = "Wrong comfirm password!!";
 		} else {
-			const res = await request({
+			const res = await clientServerSocket.request({
 				type: RequestType.REGISTER,
 				username: inputUsername.value,
 				password: inputPassword.value,

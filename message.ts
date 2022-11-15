@@ -6,6 +6,7 @@ import {
 
 export type Request = RegisterRequest | LoginRequest;
 export type Response = RegisterResponse | LoginResponse;
+export type Message = SendMessageMessage;
 
 export interface RegisterRequest {
 	type: RequestType.REGISTER;
@@ -46,6 +47,15 @@ export enum LoginStatus {
 export enum RegisterStatus {
 	OK = 0,
 	USERNAME_IS_EXIST = 1,
+}
+
+export interface SendMessageMessage {
+	type: MessageType.SEND_MESSAGE;
+	content: string;
+}
+
+export enum MessageType {
+	SEND_MESSAGE = 0,
 }
 
 class Decoder {
@@ -188,4 +198,10 @@ export class ResponseEncoder extends Encoder {
 		this.writer.write(new Uint8Array([ResponseType.REGISTER, status]));
 		this.writer.flush();
 	}
+}
+
+export class MessageDecoder extends Decoder {
+}
+
+export class MessageEncoder extends Encoder {
 }
