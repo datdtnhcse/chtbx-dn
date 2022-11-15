@@ -28,10 +28,10 @@ socket.addEventListener("message", (e) => {
 	username.value = data.username;
 }, { once: true });
 
-export function send(req: LoginRequest): Promise<LoginResponse>;
-export function send(req: RegisterRequest): Promise<RegisterResponse>;
+export function request(req: LoginRequest): Promise<LoginResponse>;
+export function request(req: RegisterRequest): Promise<RegisterResponse>;
 
-export async function send(req: unknown) {
+export async function request(req: unknown) {
 	return await new Promise((resolve) => {
 		socket.send(JSON.stringify(req));
 		socket.addEventListener("message", (e) => {
