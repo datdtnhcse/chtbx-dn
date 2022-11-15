@@ -9,6 +9,7 @@ export const { port } = await esbuild.serve({
 }, {
 	entryPoints: ["./gui/index.tsx"],
 	bundle: true,
+	treeShaking: true,
 	format: "esm",
 	jsx: "automatic",
 	jsxImportSource: "preact",

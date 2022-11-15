@@ -1,4 +1,4 @@
-import { signal } from "https://esm.sh/v96/@preact/signals-core@1.2.2/dist/signals-core.d.ts";
+import { signal } from "@preact/signals";
 import {
 	LoginRequest,
 	LoginResponse,

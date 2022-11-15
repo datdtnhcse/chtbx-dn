@@ -1,17 +1,15 @@
 import "dotenv/load";
 import { serve } from "std/http/server.ts";
+import { MessageDecoder, ResponseDecoder } from "../decoder.ts";
+import { MessageEncoder, RequestEncoder } from "../encoder.ts";
 import {
 	LoginRequest,
 	LoginStatus,
 	Message,
-	MessageDecoder,
-	MessageEncoder,
 	MessageType,
 	RegisterRequest,
 	Request,
-	RequestEncoder,
 	RequestType,
-	ResponseDecoder,
 	ResponseType,
 	SendMessageMessage,
 } from "../message.ts";

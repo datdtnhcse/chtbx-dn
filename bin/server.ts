@@ -1,13 +1,13 @@
 import "dotenv/load";
 import { addAccount, findAccount, setIP } from "../db.ts";
+import { RequestDecoder } from "../decoder.ts";
+import { ResponseEncoder } from "../encoder.ts";
 import {
 	LoginRequest,
 	LoginStatus,
 	RegisterRequest,
 	RegisterStatus,
-	RequestDecoder,
 	RequestType,
-	ResponseEncoder,
 } from "../message.ts";
 class Handler {
 	ip: string;
