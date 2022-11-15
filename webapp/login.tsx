@@ -1,7 +1,8 @@
 import { useSignal } from "@preact/signals";
-import { LoginStatus, RequestType } from "../message.ts";
+import { ActionType } from "../protocol/action_result.ts";
+import { LoginStatus } from "../protocol/request_response.ts";
 import Register from "./register.tsx";
-import { clientServerSocket } from "./websocket.ts";
+import { clientConnection, state } from "./state.ts";
 
 export default function Login() {
 	const registersignal = useSignal("");
@@ -11,16 +12,18 @@ export default function Login() {
 	const toregister = () => {
 		registersignal.value = "OK";
 	};
-	const login = async () => {
-		const res = await clientServerSocket.request({
-			type: RequestType.LOGIN,
+	const login = () => {
+		clientConnection.on("LOGIN", (res) => {
+			if (res.status == LoginStatus.OK) {
+				state.username.value = inputUsername.value;
+			}
+			status.value = LoginStatus[res.status];
+		}, { once: true });
+		clientConnection.act({
+			type: ActionType.LOGIN,
 			username: inputUsername.value,
 			password: inputPassword.value,
 		});
-		if (res.status == LoginStatus.OK) {
-			clientServerSocket.username.value = inputUsername.value;
-		}
-		status.value = LoginStatus[res.status];
 	};
 
 	if (registersignal.value == "OK") {

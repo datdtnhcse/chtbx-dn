@@ -1,5 +1,6 @@
 import { BufReader } from "std/io/buffer.ts";
 import { readerFromStreamReader } from "std/streams/conversion.ts";
+import { Message } from "../protocol/message.ts";
 import {
 	LoginRequest,
 	LoginResponse,
@@ -9,9 +10,9 @@ import {
 	RequestType,
 	Response,
 	ResponseType,
-} from "./message.ts";
+} from "../protocol/request_response.ts";
 
-class Decoder {
+export abstract class Decoder<T> {
 	reader: BufReader;
 	constructor(conn: Deno.Conn) {
 		this.reader = BufReader.create(
@@ -35,9 +36,11 @@ class Decoder {
 	async nullStr() {
 		return (await this.reader.readString("\0"))!;
 	}
+
+	abstract decode(): Promise<T>;
 }
 
-export class RequestDecoder extends Decoder {
+export class RequestDecoder extends Decoder<Request> {
 	async decode(): Promise<Request> {
 		const type = await this.byte();
 		if (isNaN(type)) {
@@ -57,8 +60,17 @@ export class RequestDecoder extends Decoder {
 	async login(): Promise<LoginRequest> {
 		const username = await this.lenStr();
 		const password = await this.lenStr();
-		return { type: RequestType.LOGIN, username, password };
+		const ip: string = [
+			await this.byte(),
+			await this.byte(),
+			await this.byte(),
+			await this.byte(),
+		].join(".");
+		const port: number = (await this.byte()) * Math.pow(2, 8) +
+			await this.byte();
+		return { type: RequestType.LOGIN, username, password, ip, port };
 	}
+
 	async register(): Promise<RegisterRequest> {
 		const username = await this.lenStr();
 		const password = await this.lenStr();
@@ -66,7 +78,7 @@ export class RequestDecoder extends Decoder {
 	}
 }
 
-export class ResponseDecoder extends Decoder {
+export class ResponseDecoder extends Decoder<Response> {
 	async decode(): Promise<Response> {
 		const type = await this.byte();
 		if (isNaN(type)) {
@@ -90,6 +102,7 @@ export class ResponseDecoder extends Decoder {
 			status,
 		};
 	}
+
 	async register(): Promise<RegisterResponse> {
 		const status = await this.byte();
 		return {
@@ -99,5 +112,8 @@ export class ResponseDecoder extends Decoder {
 	}
 }
 
-export class MessageDecoder extends Decoder {
+export class MessageDecoder extends Decoder<Message> {
+	decode(): Promise<Message> {
+		throw "unimplemented";
+	}
 }

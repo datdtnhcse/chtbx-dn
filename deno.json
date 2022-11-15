@@ -1,7 +1,7 @@
 {
 	"tasks": {
-		"client": "deno run -Ar bin/client.ts",
-		"server": "deno run -Ar bin/server.ts"
+		"client": "deno run -Ar webapp/main.ts & deno run -Ar client/main.ts",
+		"server": "deno run -Ar server/main.ts"
 	},
 	"importMap": "./import_map.json",
 	"fmt": {

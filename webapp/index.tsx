@@ -1,13 +1,13 @@
 import { render } from "preact";
 import Dash from "./dash.tsx";
 import Login from "./login.tsx";
-import { clientServerSocket } from "./websocket.ts";
+import { initializing, state } from "./state.ts";
 
 function App() {
-	if (clientServerSocket.initializing.value) {
+	if (initializing.value) {
 		return <h1>Loading...</h1>;
 	}
-	if (clientServerSocket.username.value === null) {
+	if (state.username.value === null) {
 		return <Login />;
 	}
 	return <Dash />;

@@ -7,17 +7,24 @@ CREATE TABLE IF NOT EXISTS accounts (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	username TEXT NOT NUll UNIQUE,
 	password TEXT NOT NULL,
-	ip TEXT
+	ip TEXT,
+	port INTEGER
 );
 INSERT INTO accounts(username, password) VALUES ('khang', '123456');
 `);
 
 export const findAccount = db.prepareQuery<
 	never,
-	{ id: number; username: string; password: string; ip: string | null },
+	{
+		id: number;
+		username: string;
+		password: string;
+		ip: string | null;
+		port: number | null;
+	},
 	{ username: string }
 >(
-	"SELECT id, username, password, ip FROM accounts WHERE username = :username;",
+	"SELECT id, username, password, ip, port FROM accounts WHERE username = :username;",
 );
 export const addAccount = db.prepareQuery<
 	never,
@@ -30,9 +37,9 @@ export const addAccount = db.prepareQuery<
 export const setIP = db.prepareQuery<
 	never,
 	never,
-	{ id: number; ip: string | null }
+	{ id: number; ip: string | null; port: number | null }
 >(`
 UPDATE accounts
-SET ip = :ip
+SET ip = :ip, port = :port
 WHERE id = :id
 ;`);
