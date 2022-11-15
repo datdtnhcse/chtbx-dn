@@ -1,8 +1,14 @@
+import { TCPMessageMessage } from "../connection/message_message.ts";
 import { TCPRequestResponse } from "../connection/request_response.ts";
 import { WebSocketResultAction } from "../connection/result_action.ts";
 import { P2P_PORT, SERVER_HOST, SERVER_PORT, WEBSOCKET_PORT } from "../env.ts";
 import { ResultType, State } from "../protocol/action_result.ts";
-import { LoginStatus, RequestType } from "../protocol/request_response.ts";
+import { MessageType } from "../protocol/message.ts";
+import {
+	Friend,
+	LoginStatus,
+	RequestType,
+} from "../protocol/request_response.ts";
 
 // The client computer has to open 3 ports:
 // 1. Preact web app (see webapp.ts)
@@ -30,8 +36,7 @@ if (p2pServer.addr.transport !== "tcp") throw "unreachable";
 const ip = p2pServer.addr.hostname;
 const port = p2pServer.addr.port;
 
-const state: State = { username: null };
-// list of friends
+const state: State = { username: null, friends: [] };
 
 // WEB SOCKET SERVER
 serveWebSocket();
@@ -54,7 +59,7 @@ async function serveWebSocket() {
 			// if client want to open a p2p connection
 			const subProtocol = request.headers.get("sec-websocket-protocol");
 			if (subProtocol === "p2p.chtbx.com") {
-				// TODO
+				handleWebSocketP2P(socket);
 				await respondWith(response);
 				continue;
 			}
@@ -119,9 +124,108 @@ async function handleWebSocketClientServer(socket: WebSocket) {
 			}, { once: true });
 		});
 
+		webAppConnection.on("SYNC", (_) => {
+			if (state.username !== null) {
+				console.log("fetching friends");
+				serverConnection.request({ type: RequestType.FRIEND_LIST });
+				serverConnection.on("FRIEND_LIST", (res) => {
+					state.friends = res.friends;
+					console.log(state.friends);
+					webAppConnection?.result({ type: ResultType.SYNC, state });
+				}, { once: true });
+			} else {
+				webAppConnection?.result({ type: ResultType.SYNC, state });
+			}
+		});
+
+		webAppConnection.on("CONNECT", async (act) => {
+			const friend = state.friends.find((friend) =>
+				friend.username === act.username
+			);
+			if (!friend) throw "no friend with that username exist";
+			const theirEnd = new TCPMessageMessage(
+				await Deno.connect({ hostname: friend.ip, port: friend.port }),
+			);
+			friendConnections.set(act.username, [null, theirEnd]);
+			theirEnd.message({
+				type: MessageType.HELLO,
+				username: state.username!,
+			});
+			theirEnd.listen().finally(() => {
+				friendConnections.delete(act.username);
+			});
+		});
+
 		await webAppConnection.listen();
 	} finally {
 		// on closing:
 		webAppConnection = null;
+	}
+}
+
+async function handleWebSocketP2P(socket: WebSocket) {
+	console.log("handle p2p websocket connection");
+	const webAppChatConnection = new WebSocketResultAction(socket);
+	webAppChatConnection.listen();
+	const [ourEnd, theirEnd] = await new Promise<
+		[TCPMessageMessage, TCPMessageMessage]
+	>((resolve) => {
+		webAppChatConnection.on("CONNECT", (act) => {
+			const [ourEnd, theirEnd] = friendConnections.get(act.username)!;
+			resolve([ourEnd!, theirEnd!]);
+		}, { once: true });
+	});
+	ourEnd.listen();
+	theirEnd.listen();
+	console.log("resolved friend connection");
+	ourEnd.on("SEND_MESSAGE", (msg) => {
+		console.log(msg);
+	});
+	theirEnd.message({
+		type: MessageType.SEND_MESSAGE,
+		content: "Hello",
+	});
+}
+
+const friendConnections: Map<
+	string,
+	[TCPMessageMessage | null, TCPMessageMessage]
+> = new Map();
+
+serveP2P();
+async function serveP2P() {
+	for await (const conn of p2pServer) {
+		if (webAppConnection === null) {
+			conn.close();
+			continue;
+		}
+		const ourEnd = new TCPMessageMessage(conn);
+		ourEnd.listen();
+		const friend = await new Promise<Friend | undefined>((resolve) =>
+			ourEnd.on("HELLO", (msg) => {
+				resolve(
+					state.friends.find((friend) =>
+						friend.username === msg.username
+					),
+				);
+			}, { once: true })
+		);
+		if (!friend) throw "no friend with that id exist";
+		const ends = friendConnections.get(friend.username);
+		if (ends && ends[1]) {
+			ends[0] = ourEnd;
+		} else {
+			const theirEnd = new TCPMessageMessage(
+				await Deno.connect({ hostname: friend.ip, port: friend.port }),
+			);
+			theirEnd.listen().finally(() => {
+				friendConnections.delete(friend.username);
+			});
+			friendConnections.set(friend.username, [ourEnd, theirEnd]);
+		}
+		webAppConnection.result({
+			type: ResultType.CONNECT,
+			username: friend.username,
+		});
 	}
 }

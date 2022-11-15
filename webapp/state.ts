@@ -1,6 +1,6 @@
 import { Signal, signal } from "@preact/signals";
 import { WebSocketActionResult } from "../connection/action_result.ts";
-import { State } from "../protocol/action_result.ts";
+import { ActionType, State } from "../protocol/action_result.ts";
 
 // client socket
 
@@ -23,7 +23,10 @@ type SignalState = {
 	[K in keyof State]: Signal<State[K]>;
 };
 
-export const state: SignalState = { username: signal(null) };
+export const state: SignalState = {
+	username: signal(null),
+	friends: signal([]),
+};
 
 // initial sync
 export const initializing = signal(true);
@@ -37,6 +40,16 @@ clientConnection.on("SYNC", (res) => {
 			// @ts-ignore: same key, no worries
 			: res.state[k];
 	}
-}, { once: true });
+});
 
-// listen for events
+const friendConnections: Map<string, WebSocketActionResult> = new Map();
+
+clientConnection.on("CONNECT", (res) => {
+	const socket = new WebSocket(url, "p2p.chtbx.com");
+	const friendConnection = new WebSocketActionResult(socket);
+	friendConnections.set(res.username, friendConnection);
+	friendConnection.act({ type: ActionType.CONNECT, username: res.username });
+	friendConnection.listen().finally(() => {
+		friendConnections.delete(res.username);
+	});
+});

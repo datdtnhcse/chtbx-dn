@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 INSERT INTO accounts(username, password) VALUES ('khang', '123456');
 `);
 
-export const findAccount = db.prepareQuery<
+export const findAccountByUsername = db.prepareQuery<
 	never,
 	{
 		id: number;
@@ -25,6 +25,19 @@ export const findAccount = db.prepareQuery<
 	{ username: string }
 >(
 	"SELECT id, username, password, ip, port FROM accounts WHERE username = :username;",
+);
+export const findAccountById = db.prepareQuery<
+	never,
+	{
+		id: number;
+		username: string;
+		password: string;
+		ip: string | null;
+		port: number | null;
+	},
+	{ id: number }
+>(
+	"SELECT id, username, password, ip, port FROM accounts WHERE id = :id;",
 );
 export const addAccount = db.prepareQuery<
 	never,

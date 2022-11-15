@@ -29,7 +29,7 @@ export class WebSocketResultAction {
 		}, { ...options, signal: this.#controller.signal });
 	}
 
-	#emit(act: Action) {
+	emit(act: Action) {
 		this.#target.dispatchEvent(
 			new CustomEvent(ActionType[act.type], { detail: act }),
 		);
@@ -42,7 +42,7 @@ export class WebSocketResultAction {
 				this.#resolve();
 			});
 			this.#socket.addEventListener("message", (e) => {
-				this.#emit(JSON.parse(e.data));
+				this.emit(JSON.parse(e.data));
 			}, { signal: this.#controller.signal });
 
 			// on closing, remove all the listener and return from promise

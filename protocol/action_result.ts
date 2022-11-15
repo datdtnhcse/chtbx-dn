@@ -2,19 +2,34 @@
  * Data types for working with webapp-client-server connection
  */
 
-import { LoginStatus, RegisterStatus } from "./request_response.ts";
+import { Friend, LoginStatus, RegisterStatus } from "./request_response.ts";
 
-export type Action = LoginAction | RegisterAction | SyncAction;
-export type Result = LoginResult | RegisterResult | SyncResult;
+export type Action =
+	| LoginAction
+	| RegisterAction
+	| SyncAction
+	| ConnectAction
+	| HelloAction;
+export type Result =
+	| LoginResult
+	| RegisterResult
+	| SyncResult
+	| ConnectResult
+	| HelloResult;
+
 export enum ActionType {
-	LOGIN = 0,
-	REGISTER = 1,
+	REGISTER = 0,
+	LOGIN = 1,
 	SYNC = 2,
+	CONNECT = 3,
+	HELLO = 4,
 }
 export enum ResultType {
-	LOGIN = 0,
-	REGISTER = 1,
+	REGISTER = 0,
+	LOGIN = 1,
 	SYNC = 2,
+	CONNECT = 3,
+	HELLO = 4,
 }
 
 export type LoginAction = {
@@ -36,7 +51,6 @@ export type RegisterResult = {
 	type: ResultType.REGISTER;
 	status: RegisterStatus;
 };
-
 export type SyncAction = {
 	type: ActionType.SYNC;
 };
@@ -47,4 +61,23 @@ export type SyncResult = {
 
 export type State = {
 	username: string | null;
+	friends: Friend[];
+};
+
+export type ConnectAction = {
+	type: ActionType.CONNECT;
+	username: string;
+};
+export type ConnectResult = {
+	type: ResultType.CONNECT;
+	username: string;
+};
+
+export type HelloAction = {
+	type: ActionType.HELLO;
+	username: string;
+};
+export type HelloResult = {
+	type: ResultType.HELLO;
+	username: string;
 };

@@ -1,7 +1,15 @@
 import { BufReader } from "std/io/buffer.ts";
 import { readerFromStreamReader } from "std/streams/conversion.ts";
-import { Message } from "../protocol/message.ts";
 import {
+	HelloMessage,
+	Message,
+	MessageType,
+	SendMessageMessage,
+} from "../protocol/message.ts";
+import {
+	Friend,
+	FriendListRequest,
+	FriendListResponse,
 	LoginRequest,
 	LoginResponse,
 	RegisterRequest,
@@ -21,7 +29,23 @@ export abstract class Decoder<T> {
 	}
 
 	async byte() {
-		return await this.reader.readByte() ?? NaN;
+		const byte = await this.reader.readByte();
+		if (byte === null) throw "EOF";
+		return byte;
+	}
+
+	async twoBytes() {
+		return (await this.byte()) * Math.pow(2, 8) +
+			await this.byte();
+	}
+
+	async ip() {
+		return [
+			await this.byte(),
+			await this.byte(),
+			await this.byte(),
+			await this.byte(),
+		].join(".");
 	}
 
 	// read a string prefixed by its length
@@ -34,7 +58,7 @@ export abstract class Decoder<T> {
 
 	// read a null-terminated string
 	async nullStr() {
-		return (await this.reader.readString("\0"))!;
+		return (await this.reader.readString("\0"))!.slice(0, -1);
 	}
 
 	abstract decode(): Promise<T>;
@@ -43,15 +67,13 @@ export abstract class Decoder<T> {
 export class RequestDecoder extends Decoder<Request> {
 	async decode(): Promise<Request> {
 		const type = await this.byte();
-		if (isNaN(type)) {
-			throw new Error("EOF");
-		}
-
 		switch (type) {
 			case RequestType.LOGIN:
 				return this.login();
 			case RequestType.REGISTER:
 				return this.register();
+			case RequestType.FRIEND_LIST:
+				return this.friendList();
 		}
 
 		throw new Error(`unreachable type: ${type}`);
@@ -60,14 +82,8 @@ export class RequestDecoder extends Decoder<Request> {
 	async login(): Promise<LoginRequest> {
 		const username = await this.lenStr();
 		const password = await this.lenStr();
-		const ip: string = [
-			await this.byte(),
-			await this.byte(),
-			await this.byte(),
-			await this.byte(),
-		].join(".");
-		const port: number = (await this.byte()) * Math.pow(2, 8) +
-			await this.byte();
+		const ip: string = await this.ip();
+		const port: number = await this.twoBytes();
 		return { type: RequestType.LOGIN, username, password, ip, port };
 	}
 
@@ -76,20 +92,23 @@ export class RequestDecoder extends Decoder<Request> {
 		const password = await this.lenStr();
 		return { type: RequestType.REGISTER, username, password };
 	}
+
+	friendList(): FriendListRequest {
+		return { type: RequestType.FRIEND_LIST };
+	}
 }
 
 export class ResponseDecoder extends Decoder<Response> {
 	async decode(): Promise<Response> {
 		const type = await this.byte();
-		if (isNaN(type)) {
-			throw new Error("EOF");
-		}
 
 		switch (type) {
 			case RequestType.LOGIN:
 				return this.login();
 			case RequestType.REGISTER:
 				return this.register();
+			case RequestType.FRIEND_LIST:
+				return this.friendList();
 		}
 
 		throw new Error(`unreachable type: ${type}`);
@@ -110,10 +129,40 @@ export class ResponseDecoder extends Decoder<Response> {
 			status,
 		};
 	}
+
+	async friendList(): Promise<FriendListResponse> {
+		const len = await this.twoBytes();
+		const friends: Friend[] = new Array(len);
+		for (let i = 0; i < len; i++) {
+			friends[i] = {
+				username: await this.lenStr(),
+				ip: await this.ip(),
+				port: await this.twoBytes(),
+			};
+		}
+		return { type: ResponseType.FRIEND_LIST, friends };
+	}
 }
 
 export class MessageDecoder extends Decoder<Message> {
-	decode(): Promise<Message> {
-		throw "unimplemented";
+	async decode(): Promise<Message> {
+		const type = await this.byte();
+
+		switch (type) {
+			case MessageType.SEND_MESSAGE:
+				return this.sendMessage();
+			case MessageType.HELLO:
+				return this.hello();
+		}
+
+		throw new Error(`unreachable type: ${type}`);
+	}
+	async sendMessage(): Promise<SendMessageMessage> {
+		const content = await this.nullStr();
+		return { type: MessageType.SEND_MESSAGE, content };
+	}
+	async hello(): Promise<HelloMessage> {
+		const username = await this.lenStr();
+		return { type: MessageType.HELLO, username };
 	}
 }
