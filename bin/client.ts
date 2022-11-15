@@ -1,6 +1,13 @@
 import "dotenv/load";
 import { serve } from "std/http/server.ts";
-import { Request, RequestEncoder, ResponseDecoder } from "../message.ts";
+import {
+	LoginStatus,
+	Request,
+	RequestEncoder,
+	RequestType,
+	ResponseDecoder,
+	ResponseType,
+} from "../message.ts";
 import { port as esbuildPort } from "./esbuild.ts";
 
 console.log(
@@ -44,26 +51,26 @@ await serve(async (request) => {
 }, { port: parseInt(Deno.env.get("CLIENT_PORT")!) });
 
 async function handleRequest(socket: WebSocket, req: Request) {
-	if (req.type == "login") {
+	if (req.type == RequestType.LOGIN) {
 		encoder.login(req.username, req.password);
 		const res = await decoder.decode();
-		if (res.type !== "login") throw "unreachable";
+		if (res.type !== RequestType.LOGIN) throw "unreachable";
 
-		console.log("login status", res.status);
+		console.log("login status", LoginStatus[res.status]);
 		socket.send(JSON.stringify(res));
 
-		if (res.status == "OK") {
+		if (res.status == LoginStatus.OK) {
 			username = req.username;
 		}
 
 		return;
 	}
-	if (req.type == "register") {
+	if (req.type == RequestType.REGISTER) {
 		encoder.register(req.username, req.password);
 		const res = await decoder.decode();
-		if (res.type !== "register") throw "unreachable";
+		if (res.type !== ResponseType.REGISTER) throw "unreachable";
 
-		console.log("register status", res.status);
+		console.log("register status", ResponseType[res.status]);
 		socket.send(JSON.stringify(res));
 		return;
 	}

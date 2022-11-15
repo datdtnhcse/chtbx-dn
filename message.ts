@@ -8,25 +8,25 @@ export type Request = RegisterRequest | LoginRequest;
 export type Response = RegisterResponse | LoginResponse;
 
 export interface RegisterRequest {
-	type: "register";
+	type: RequestType.REGISTER;
 	username: string;
 	password: string;
 }
 
 export interface RegisterResponse {
-	type: "register";
-	status: keyof typeof RegisterStatus;
+	type: ResponseType.REGISTER;
+	status: RegisterStatus;
 }
 
 export interface LoginRequest {
-	type: "login";
+	type: RequestType.LOGIN;
 	username: string;
 	password: string;
 }
 
 export interface LoginResponse {
-	type: "login";
-	status: keyof typeof LoginStatus;
+	type: ResponseType.LOGIN;
+	status: LoginStatus;
 }
 
 export enum RequestType {
@@ -94,12 +94,12 @@ export class RequestDecoder extends Decoder {
 	async login(): Promise<LoginRequest> {
 		const username = await this.lenStr();
 		const password = await this.lenStr();
-		return { type: "login", username, password };
+		return { type: RequestType.LOGIN, username, password };
 	}
 	async register(): Promise<RegisterRequest> {
 		const username = await this.lenStr();
 		const password = await this.lenStr();
-		return { type: "register", username, password };
+		return { type: RequestType.REGISTER, username, password };
 	}
 }
 
@@ -123,15 +123,15 @@ export class ResponseDecoder extends Decoder {
 	async login(): Promise<LoginResponse> {
 		const status = await this.byte();
 		return {
-			type: "login",
-			status: LoginStatus[status] as keyof typeof LoginStatus,
+			type: ResponseType.LOGIN,
+			status,
 		};
 	}
 	async register(): Promise<RegisterResponse> {
 		const status = await this.byte();
 		return {
-			type: "register",
-			status: RegisterStatus[status] as keyof typeof RegisterStatus,
+			type: ResponseType.REGISTER,
+			status,
 		};
 	}
 }

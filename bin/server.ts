@@ -6,6 +6,7 @@ import {
 	RegisterRequest,
 	RegisterStatus,
 	RequestDecoder,
+	RequestType,
 	ResponseEncoder,
 } from "../message.ts";
 class Handler {
@@ -27,10 +28,10 @@ class Handler {
 			while (true) {
 				const request = await this.decoder.decode();
 				switch (request.type) {
-					case "login":
+					case RequestType.LOGIN:
 						this.login(request);
 						break;
-					case "register":
+					case RequestType.REGISTER:
 						this.register(request);
 						break;
 				}

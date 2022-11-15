@@ -1,7 +1,8 @@
 import { useSignal } from "@preact/signals";
+import { LoginStatus, RequestType } from "../message.ts";
+import Register from "./register.tsx";
 import { username } from "./state.ts";
 import { send } from "./websocket.ts";
-import Register from "./register.tsx";
 
 export default function Login() {
 	const registersignal = useSignal("");
@@ -13,14 +14,14 @@ export default function Login() {
 	};
 	const login = async () => {
 		const res = await send({
-			type: "login",
+			type: RequestType.LOGIN,
 			username: inputUsername.value,
 			password: inputPassword.value,
 		});
-		if (res.status == "OK") {
+		if (res.status == LoginStatus.OK) {
 			username.value = inputUsername.value;
 		}
-		status.value = res.status;
+		status.value = LoginStatus[res.status];
 	};
 
 	if (registersignal.value == "OK") {
