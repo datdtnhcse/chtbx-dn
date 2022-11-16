@@ -106,7 +106,7 @@ for await (const conn of listener) {
 
 	clientConnection.on("FRIEND_LIST", () => {
 		if (id === null) return;
-		console.log("finding friends of", id);
+		console.log("finding friends of", id)
 		const account = findAccountById.firstEntry({ id });
 		console.log(account);
 		if (!account) throw "account not found in database: " + id;

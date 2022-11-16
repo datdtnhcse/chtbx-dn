@@ -7,7 +7,6 @@ import { ActionType, State } from "../protocol/action_result.ts";
 declare global {
 	interface Window {
 		WEBSOCKET_PORT: number;
-		SUBWEBSOCKET_PORT: number;
 	}
 }
 
@@ -46,8 +45,7 @@ clientConnection.on("SYNC", (res) => {
 const friendConnections: Map<string, WebSocketActionResult> = new Map();
 
 clientConnection.on("CONNECT", (res) => {
-	url.port = `${window.SUBWEBSOCKET_PORT}`;
-	const socket = new WebSocket(url);
+	const socket = new WebSocket(url, "p2p.chtbx.com");
 	const friendConnection = new WebSocketActionResult(socket);
 	friendConnections.set(res.username, friendConnection);
 	friendConnection.act({ type: ActionType.CONNECT, username: res.username });
