@@ -1,6 +1,6 @@
 import * as esbuild from "https://deno.land/x/esbuild@v0.15.13/mod.js";
 import * as importMap from "https://esm.sh/esbuild-plugin-import-map@2.1.0";
-import { WEBAPP_PORT, SUBWEBSOCKET_PORT, WEBSOCKET_PORT } from "../env.ts";
+import { WEBAPP_PORT, WEBSOCKET_PORT } from "../env.ts";
 
 await importMap.load(["./import_map.json"]);
 await esbuild.serve({
@@ -17,6 +17,5 @@ await esbuild.serve({
 	plugins: [importMap.plugin()],
 	define: {
 		"window.WEBSOCKET_PORT": `${WEBSOCKET_PORT}`,
-		"window.SUBWEBSOCKET_PORT": `${SUBWEBSOCKET_PORT}`,
 	},
 });
