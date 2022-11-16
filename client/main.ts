@@ -1,7 +1,7 @@
 import { TCPMessageMessage } from "../connection/message_message.ts";
 import { TCPRequestResponse } from "../connection/request_response.ts";
 import { WebSocketResultAction } from "../connection/result_action.ts";
-import { P2P_PORT, SERVER_HOST, SERVER_PORT, WEBSOCKET_PORT } from "../env.ts";
+import { P2P_PORT, SERVER_HOST, SERVER_PORT, WEBSOCKET_PORT, SUBWEBSOCKET_PORT } from "../env.ts";
 import { ResultType, State } from "../protocol/action_result.ts";
 import { MessageType } from "../protocol/message.ts";
 import {
@@ -16,6 +16,7 @@ import {
 // 3. P2P server
 
 const webSocketServer = Deno.listen({ port: WEBSOCKET_PORT, transport: "tcp" });
+const subWebSocketServer = Deno.listen({ port: SUBWEBSOCKET_PORT, transport: "tcp" });
 const p2pServer = Deno.listen({ port: P2P_PORT, transport: "tcp" });
 
 // Also, it has to connect to server
@@ -56,14 +57,6 @@ async function serveWebSocket() {
 
 			const { socket, response } = Deno.upgradeWebSocket(request);
 
-			// if client want to open a p2p connection
-			const subProtocol = request.headers.get("sec-websocket-protocol");
-			if (subProtocol === "p2p.chtbx.com") {
-				handleWebSocketP2P(socket);
-				await respondWith(response);
-				continue;
-			}
-
 			// client open a client-server connection
 			if (webAppConnection != null) {
 				const response = new Response(
@@ -75,6 +68,28 @@ async function serveWebSocket() {
 			}
 
 			handleWebSocketClientServer(socket);
+			await respondWith(response);
+		}
+	}
+}
+serveSubWebSocket();
+async function serveSubWebSocket() {
+	for await (const connection of subWebSocketServer) {
+		const httpConnection = Deno.serveHttp(connection);
+		for await (const { request, respondWith } of httpConnection) {
+			if (request.headers.get("upgrade") !== "websocket") {
+				// not supported, only websocket are allowed
+				await respondWith(
+					new Response("only websocket connection are allowed", {
+						status: 505,
+					}),
+				);
+				continue;
+			}
+
+			const { socket, response } = Deno.upgradeWebSocket(request);
+
+			handleWebSocketP2P(socket);
 			await respondWith(response);
 		}
 	}
@@ -144,7 +159,7 @@ async function handleWebSocketClientServer(socket: WebSocket) {
 			);
 			if (!friend) throw "no friend with that username exist";
 			const theirEnd = new TCPMessageMessage(
-				await Deno.connect({ hostname: friend.ip, port: friend.port }),
+				await Deno.connect({ hostname: friend.ip == "0.0.0.0" ? "127.0.0.1" : friend.ip, port: friend.port }),
 			);
 			friendConnections.set(act.username, [null, theirEnd]);
 			theirEnd.message({
