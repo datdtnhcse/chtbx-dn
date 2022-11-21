@@ -1,6 +1,6 @@
+import { WebSocketResultAction } from "../connection/action_result.ts";
 import { TCPMessageMessage } from "../connection/message_message.ts";
 import { TCPRequestResponse } from "../connection/request_response.ts";
-import { WebSocketResultAction } from "../connection/result_action.ts";
 import {
 	P2P_PORT,
 	SERVER_HOST,
@@ -109,12 +109,12 @@ async function handleWebSocketClientServer(socket: WebSocket) {
 	try {
 		webAppConnection = new WebSocketResultAction(socket);
 
-		webAppConnection.result({ type: ResultType.SYNC, state });
+		webAppConnection.send({ type: ResultType.SYNC, state });
 
 		// 1. if receive login:
 		webAppConnection.on("LOGIN", (action) => {
 			// 2. request server
-			serverConnection.request({
+			serverConnection.send({
 				type: RequestType.LOGIN,
 				username: action.username,
 				password: action.password,
@@ -127,7 +127,7 @@ async function handleWebSocketClientServer(socket: WebSocket) {
 				if (res.status === LoginStatus.OK) {
 					state.username = action.username;
 				}
-				webAppConnection?.result({
+				webAppConnection?.send({
 					type: ResultType.LOGIN,
 					status: res.status,
 				});
@@ -135,13 +135,13 @@ async function handleWebSocketClientServer(socket: WebSocket) {
 		});
 
 		webAppConnection.on("REGISTER", (action) => {
-			serverConnection.request({
+			serverConnection.send({
 				type: RequestType.REGISTER,
 				username: action.username,
 				password: action.password,
 			});
 			serverConnection.on("REGISTER", (res) => {
-				webAppConnection?.result({
+				webAppConnection?.send({
 					type: ResultType.REGISTER,
 					status: res.status,
 				});
@@ -151,14 +151,14 @@ async function handleWebSocketClientServer(socket: WebSocket) {
 		webAppConnection.on("SYNC", (_) => {
 			if (state.username !== null) {
 				console.log("fetching friends");
-				serverConnection.request({ type: RequestType.FRIEND_LIST });
+				serverConnection.send({ type: RequestType.FRIEND_LIST });
 				serverConnection.on("FRIEND_LIST", (res) => {
 					state.friends = res.friends;
 					console.log(state.friends);
-					webAppConnection?.result({ type: ResultType.SYNC, state });
+					webAppConnection?.send({ type: ResultType.SYNC, state });
 				}, { once: true });
 			} else {
-				webAppConnection?.result({ type: ResultType.SYNC, state });
+				webAppConnection?.send({ type: ResultType.SYNC, state });
 			}
 		});
 
@@ -174,7 +174,7 @@ async function handleWebSocketClientServer(socket: WebSocket) {
 				}),
 			);
 			friendConnections.set(act.username, [null, theirEnd]);
-			theirEnd.message({
+			theirEnd.send({
 				type: MessageType.HELLO,
 				username: state.username!,
 			});
@@ -208,7 +208,7 @@ async function handleWebSocketP2P(socket: WebSocket) {
 	ourEnd.on("SEND_MESSAGE", (msg) => {
 		console.log(msg);
 	});
-	theirEnd.message({
+	theirEnd.send({
 		type: MessageType.SEND_MESSAGE,
 		content: "Hello",
 	});
@@ -250,7 +250,7 @@ async function serveP2P() {
 			});
 			friendConnections.set(friend.username, [ourEnd, theirEnd]);
 		}
-		webAppConnection.result({
+		webAppConnection.send({
 			type: ResultType.CONNECT,
 			username: friend.username,
 		});

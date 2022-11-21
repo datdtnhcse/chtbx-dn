@@ -23,7 +23,7 @@ export default function Register() {
 				}
 				status.value = RegisterStatus[res.status];
 			}, { once: true });
-			clientConnection.act({
+			clientConnection.send({
 				type: ActionType.REGISTER,
 				username: inputUsername.value,
 				password: inputPassword.value,

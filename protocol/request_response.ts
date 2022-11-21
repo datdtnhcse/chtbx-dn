@@ -11,6 +11,16 @@ export enum RequestType {
 }
 // alias for RequestType, the two are the same
 export import ResponseType = RequestType;
+export type RequestMap = {
+	[K in keyof typeof RequestType]: Request & { //
+		type: typeof RequestType[K];
+	};
+};
+export type ResponseMap = {
+	[K in keyof typeof ResponseType]: Response & { //
+		type: typeof ResponseType[K];
+	};
+};
 
 // LOGIN
 

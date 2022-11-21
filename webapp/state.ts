@@ -50,7 +50,7 @@ clientConnection.on("CONNECT", (res) => {
 	const socket = new WebSocket(url);
 	const friendConnection = new WebSocketActionResult(socket);
 	friendConnections.set(res.username, friendConnection);
-	friendConnection.act({ type: ActionType.CONNECT, username: res.username });
+	friendConnection.send({ type: ActionType.CONNECT, username: res.username });
 	friendConnection.listen().finally(() => {
 		friendConnections.delete(res.username);
 	});

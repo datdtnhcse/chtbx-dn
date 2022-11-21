@@ -16,7 +16,7 @@ INSERT INTO accounts(username, password) VALUES ('dat', '123456');
 CREATE TABLE IF NOT EXISTS friends (
 	id 			INTEGER 												NOT NULL,
 	friendId 	INTEGER 												NOT NULL,
-	state 		TEXT CHECK(state IN ('sent', 'received', 'friended'))   NOT NULL, 
+	state 		TEXT CHECK(state IN ('sent', 'received', 'friended'))   NOT NULL,
 	PRIMARY KEY (id, friendId)
 );
 `);
@@ -55,13 +55,11 @@ export const addAccount = db.prepareQuery<
 	{
 		username: string;
 		password: string;
-		ip: string | null;
-		port: number | null;
 	}
 >(`
-	INSERT 
-	INTO 	accounts(username, password, ip, port) 
-	VALUES 	(:username, :password, :ip, :port)
+	INSERT
+	INTO 	accounts(username, password)
+	VALUES 	(:username, :password)
 ;`);
 
 export const setIP = db.prepareQuery<
@@ -70,7 +68,7 @@ export const setIP = db.prepareQuery<
 	{ id: number; ip: string | null; port: number | null }
 >(`
 	UPDATE 	accounts
-	SET 	ip = :ip, 
+	SET 	ip = :ip,
 			port = :port
 	WHERE 	id = :id
 ;`);
@@ -82,8 +80,8 @@ export const sendRequest = db.prepareQuery<
 	never,
 	{ id: number; friendId: number }
 >(`
-	INSERT 
-	INTO 	friends(id, friendId, state) 
+	INSERT
+	INTO 	friends(id, friendId, state)
 	VALUES 	(:id, :friendId, 'sent')
 ;`);
 
@@ -92,8 +90,8 @@ export const received = db.prepareQuery<
 	never,
 	{ id: number; friendId: number }
 >(`
-	INSERT 
-	INTO 	friends(id, friendId, state) 
+	INSERT
+	INTO 	friends(id, friendId, state)
 	VALUES 	(:id, :friendId, 'received')
 ;`);
 
@@ -104,8 +102,8 @@ export const acceptRequest = db.prepareQuery<
 >(`
 	UPDATE 	friends
 	SET 	state = 'friended'
-	WHERE 	(id = :id AND friendId = :friendId)  
-   	   OR 	(id = :friendId AND friendId = :Id)  
+	WHERE 	(id = :id AND friendId = :friendId)
+   	   OR 	(id = :friendId AND friendId = :Id)
 ;`);
 
 export const denyRequest = db.prepareQuery<
@@ -113,8 +111,8 @@ export const denyRequest = db.prepareQuery<
 	never,
 	{ id: number; friendId: number }
 >(`
-	DELETE 
-	FROM 	friends 
-	WHERE 	(id = :id AND friendId = :friendId)  
+	DELETE
+	FROM 	friends
+	WHERE 	(id = :id AND friendId = :friendId)
 	   OR 	(id = :friendId AND friendId = :Id)
 ;`);

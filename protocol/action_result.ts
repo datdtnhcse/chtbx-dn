@@ -31,6 +31,16 @@ export enum ResultType {
 	CONNECT = 3,
 	HELLO = 4,
 }
+export type ActionMap = {
+	[K in keyof typeof ActionType]: Action & { //
+		type: typeof ActionType[K];
+	};
+};
+export type ResultMap = {
+	[K in keyof typeof ResultType]: Result & { //
+		type: typeof ResultType[K];
+	};
+};
 
 export type LoginAction = {
 	type: ActionType.LOGIN;

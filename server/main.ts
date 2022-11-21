@@ -1,4 +1,4 @@
-import { TCPResponseRequest } from "../connection/response_request.ts";
+import { TCPResponseRequest } from "../connection/request_response.ts";
 import { SERVER_PORT } from "../env.ts";
 import {
 	LoginStatus,
@@ -39,7 +39,7 @@ for await (const conn of listener) {
 		});
 		if (!account) {
 			console.log("username does not exist");
-			clientConnection.respond({
+			clientConnection.send({
 				type: ResponseType.LOGIN,
 				status: LoginStatus.USERNAME_NOT_EXIST,
 			});
@@ -47,7 +47,7 @@ for await (const conn of listener) {
 		}
 		if (account.password != request.password) {
 			console.log("password mismatch", account.password);
-			clientConnection.respond({
+			clientConnection.send({
 				type: ResponseType.LOGIN,
 				status: LoginStatus.WRONG_PASSWORD,
 			});
@@ -55,7 +55,7 @@ for await (const conn of listener) {
 		}
 		if (account.ip !== null) {
 			console.log("already logged in");
-			clientConnection.respond({
+			clientConnection.send({
 				type: ResponseType.LOGIN,
 				status: LoginStatus.ALREADY_LOGGED_IN,
 			});
@@ -70,7 +70,7 @@ for await (const conn of listener) {
 		);
 		id = account.id;
 		setIP.first({ id, ip: request.ip, port: request.port });
-		clientConnection.respond({
+		clientConnection.send({
 			type: ResponseType.LOGIN,
 			status: LoginStatus.OK,
 		});
@@ -88,7 +88,7 @@ for await (const conn of listener) {
 		});
 		if (account) {
 			console.log("username is exist");
-			clientConnection.respond({
+			clientConnection.send({
 				type: ResponseType.REGISTER,
 				status: RegisterStatus.USERNAME_IS_EXIST,
 			});
@@ -98,7 +98,7 @@ for await (const conn of listener) {
 			username: request.username,
 			password: request.password,
 		});
-		clientConnection.respond({
+		clientConnection.send({
 			type: ResponseType.REGISTER,
 			status: RegisterStatus.OK,
 		});
@@ -115,7 +115,7 @@ for await (const conn of listener) {
 			ip: account.ip!,
 			port: account.port!,
 		}];
-		clientConnection.respond({
+		clientConnection.send({
 			type: ResponseType.FRIEND_LIST,
 			friends,
 		});

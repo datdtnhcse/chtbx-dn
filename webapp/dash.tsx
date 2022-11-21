@@ -4,14 +4,14 @@ import { clientConnection, state } from "./state.ts";
 
 export default function Dash() {
 	useSignalEffect(() => {
-		clientConnection.act({ type: ActionType.SYNC });
+		clientConnection.send({ type: ActionType.SYNC });
 	});
 	return (
 		<ul>
 			{state.friends.value.map((friend) => (
 				<button
 					onClick={() =>
-						clientConnection.act({
+						clientConnection.send({
 							type: ActionType.CONNECT,
 							username: friend.username,
 						})}
