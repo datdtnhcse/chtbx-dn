@@ -4,8 +4,8 @@
 
 export type Message = SendMessageMessage | HelloMessage;
 export enum MessageType {
-	SEND_MESSAGE = 0,
-	HELLO = 1,
+	HELLO = 0,
+	SEND_MESSAGE = 1,
 }
 export type MessageMap = {
 	[K in keyof typeof MessageType]: Message & { //
