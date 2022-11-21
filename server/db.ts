@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS friends (
 );
 `);
 
-// accounts Query 
+// accounts Query
 
 export const findAccountByUsername = db.prepareQuery<
 	never,
@@ -52,7 +52,12 @@ export const findAccountById = db.prepareQuery<
 export const addAccount = db.prepareQuery<
 	never,
 	never,
-	{ username: string; password: string; ip: string | null; port: number | null}
+	{
+		username: string;
+		password: string;
+		ip: string | null;
+		port: number | null;
+	}
 >(`
 	INSERT 
 	INTO 	accounts(username, password, ip, port) 

@@ -1,7 +1,13 @@
 import { TCPMessageMessage } from "../connection/message_message.ts";
 import { TCPRequestResponse } from "../connection/request_response.ts";
 import { WebSocketResultAction } from "../connection/result_action.ts";
-import { P2P_PORT, SERVER_HOST, SERVER_PORT, WEBSOCKET_PORT, SUBWEBSOCKET_PORT } from "../env.ts";
+import {
+	P2P_PORT,
+	SERVER_HOST,
+	SERVER_PORT,
+	SUBWEBSOCKET_PORT,
+	WEBSOCKET_PORT,
+} from "../env.ts";
 import { ResultType, State } from "../protocol/action_result.ts";
 import { MessageType } from "../protocol/message.ts";
 import {
@@ -16,7 +22,10 @@ import {
 // 3. P2P server
 
 const webSocketServer = Deno.listen({ port: WEBSOCKET_PORT, transport: "tcp" });
-const subWebSocketServer = Deno.listen({ port: SUBWEBSOCKET_PORT, transport: "tcp" });
+const subWebSocketServer = Deno.listen({
+	port: SUBWEBSOCKET_PORT,
+	transport: "tcp",
+});
 const p2pServer = Deno.listen({ port: P2P_PORT, transport: "tcp" });
 
 // Also, it has to connect to server
@@ -159,7 +168,10 @@ async function handleWebSocketClientServer(socket: WebSocket) {
 			);
 			if (!friend) throw "no friend with that username exist";
 			const theirEnd = new TCPMessageMessage(
-				await Deno.connect({ hostname: friend.ip == "0.0.0.0" ? "127.0.0.1" : friend.ip, port: friend.port }),
+				await Deno.connect({
+					hostname: friend.ip == "0.0.0.0" ? "127.0.0.1" : friend.ip,
+					port: friend.port,
+				}),
 			);
 			friendConnections.set(act.username, [null, theirEnd]);
 			theirEnd.message({
