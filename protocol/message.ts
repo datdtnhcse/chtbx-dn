@@ -12,6 +12,7 @@ export type MessageMap = {
 		type: typeof MessageType[K];
 	};
 };
+export const messageKey = (mes: Message) => MessageType[mes.type];
 
 export type SendMessageMessage = {
 	type: MessageType.SEND_MESSAGE;

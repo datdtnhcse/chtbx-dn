@@ -1,31 +1,38 @@
 import { RequestDecoder, ResponseDecoder } from "../protocol/decoder.ts";
 import { RequestEncoder, ResponseEncoder } from "../protocol/encoder.ts";
 import {
+	requestKey,
 	RequestMap,
-	RequestType,
+	responseKey,
 	ResponseMap,
-	ResponseType,
 } from "../protocol/request_response.ts";
 import { TCPConnection } from "./mod.ts";
 
 export class TCPRequestResponse extends TCPConnection<RequestMap, ResponseMap> {
-	constructor(conn: Deno.Conn) {
+	constructor(
+		conn: Deno.Conn,
+		label = "Unamed TCP-request-response connection",
+	) {
 		super(
 			conn,
 			RequestEncoder,
 			ResponseDecoder,
-			(res) => ResponseType[res.type],
+			requestKey,
+			responseKey,
+			label,
 		);
 	}
 }
 
 export class TCPResponseRequest extends TCPConnection<ResponseMap, RequestMap> {
-	constructor(conn: Deno.Conn) {
+	constructor(conn: Deno.Conn, label: string) {
 		super(
 			conn,
 			ResponseEncoder,
 			RequestDecoder,
-			(req) => RequestType[req.type],
+			responseKey,
+			requestKey,
+			label,
 		);
 	}
 }

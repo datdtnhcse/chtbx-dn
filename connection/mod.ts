@@ -2,25 +2,38 @@ import { Decoder } from "../protocol/decoder.ts";
 import { Encoder } from "../protocol/encoder.ts";
 
 abstract class Connection<SendMap, ReceiveMap> {
+	label: string;
 	private target: EventTarget;
-	private getKey: (data: ReceiveMap[keyof ReceiveMap]) => string;
+	private receiveKey: (data: ReceiveMap[keyof ReceiveMap]) => string;
+	protected sendKey: (data: SendMap[keyof SendMap]) => string;
 	protected controller: AbortController;
 
 	constructor(
-		getKey: (key: ReceiveMap[keyof ReceiveMap]) => string,
+		sendKey: (key: SendMap[keyof SendMap]) => string,
+		receiveKey: (key: ReceiveMap[keyof ReceiveMap]) => string,
+		label: string,
 	) {
 		this.target = new EventTarget();
 		this.controller = new AbortController();
-		this.getKey = getKey;
+		this.sendKey = sendKey;
+		this.receiveKey = receiveKey;
+		this.label = label;
 	}
 
 	protected abort() {
 		this.controller.abort();
 	}
 
+	onDisconnect(handler: () => unknown) {
+		this.controller.signal.addEventListener("abort", handler, {
+			once: true,
+		});
+	}
+
 	protected emit(input: ReceiveMap[keyof ReceiveMap]) {
+		const type = this.receiveKey(input);
 		this.target.dispatchEvent(
-			new CustomEvent(this.getKey(input), { detail: input }),
+			new CustomEvent(type, { detail: input }),
 		);
 	}
 
@@ -30,13 +43,23 @@ abstract class Connection<SendMap, ReceiveMap> {
 		options?: { once: boolean },
 	) {
 		this.target.addEventListener(type.toString(), (ev) => {
-			// @ts-ignore: ev is guaranteed to be CustomEvent
-			listener(ev.detail);
+			if (ev instanceof CustomEvent) {
+				console.log(this.label, "recv", type, ev.detail);
+				listener(ev.detail);
+			}
 		}, { ...options, signal: this.controller.signal });
 	}
 
+	wait<K extends keyof ReceiveMap>(
+		type: K,
+	): Promise<ReceiveMap[K]> {
+		return new Promise((resolve) => {
+			this.on(type, resolve, { once: true });
+		});
+	}
+
 	abstract send(data: SendMap[keyof SendMap]): void;
-	abstract listen(): Promise<void>;
+	protected abstract listen(): Promise<void>;
 }
 
 export class TCPConnection<SendMap, ReceiveMap>
@@ -48,18 +71,22 @@ export class TCPConnection<SendMap, ReceiveMap>
 		clientConn: Deno.Conn,
 		Encoder: { new (conn: Deno.Conn): Encoder<SendMap[keyof SendMap]> }, // deno-fmt-ignore
 		Decoder: { new (conn: Deno.Conn): Decoder<ReceiveMap[keyof ReceiveMap]> }, // deno-fmt-ignore
-		getKey: (key: ReceiveMap[keyof ReceiveMap]) => string,
+		sendKey: (data: SendMap[keyof SendMap]) => string,
+		receiveKey: (data: ReceiveMap[keyof ReceiveMap]) => string,
+		label: string,
 	) {
-		super(getKey);
+		super(sendKey, receiveKey, label);
 		this.decoder = new Decoder(clientConn);
 		this.encoder = new Encoder(clientConn);
+		this.listen();
 	}
 
 	send(data: SendMap[keyof SendMap]) {
+		console.log(this.label, "sent", this.sendKey(data), data);
 		this.encoder.encode(data);
 	}
 
-	async listen() {
+	protected async listen() {
 		try {
 			while (true) {
 				const request = await this.decoder.decode();
@@ -84,21 +111,24 @@ export class WebSocketConnection<SendMap, ReceiveMap>
 
 	constructor(
 		socket: WebSocket,
-		getKey: (data: ReceiveMap[keyof ReceiveMap]) => string,
+		sendKey: (data: SendMap[keyof SendMap]) => string,
+		receiveKey: (data: ReceiveMap[keyof ReceiveMap]) => string,
+		label: string,
 	) {
-		super(getKey);
+		super(sendKey, receiveKey, label);
 		this.socket = socket;
+		this.listen();
 	}
 
 	async send(data: SendMap[keyof SendMap]) {
 		await this.ready;
+		console.log(this.label, "sent", this.sendKey(data), data);
 		this.socket.send(JSON.stringify(data));
 	}
 
-	async listen() {
+	protected async listen() {
 		return await new Promise<void>((resolve) => {
 			this.socket.addEventListener("open", (_) => {
-				console.log("connection ready");
 				this.resolve();
 			});
 			this.socket.addEventListener("message", (e) => {

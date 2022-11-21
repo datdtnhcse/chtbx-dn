@@ -1,4 +1,5 @@
 import { TCPResponseRequest } from "../connection/request_response.ts";
+import { serveTCPServer } from "../connection/serve.ts";
 import { SERVER_PORT } from "../env.ts";
 import {
 	LoginStatus,
@@ -12,20 +13,16 @@ import {
 	setIP,
 } from "../server/db.ts";
 
-const listener = Deno.listen({
+const tcpC2SConnection = Deno.listen({
 	port: SERVER_PORT,
 	transport: "tcp",
 });
 
-console.log("server listen at", SERVER_PORT);
-
-for await (const conn of listener) {
-	console.log("Client connect", conn.remoteAddr);
-
+serveTCPServer(tcpC2SConnection, (conn) => {
 	// connection state here
 	let id: number | null = null;
 
-	const clientConnection = new TCPResponseRequest(conn);
+	const clientConnection = new TCPResponseRequest(conn, "tcp");
 
 	clientConnection.on("LOGIN", (request) => {
 		console.log(
@@ -121,10 +118,10 @@ for await (const conn of listener) {
 		});
 	});
 
-	clientConnection.listen().finally(() => {
+	clientConnection.onDisconnect(() => {
 		console.log("terminated");
 		if (id != null) {
 			setIP.firstEntry({ id, ip: null, port: null });
 		}
 	});
-}
+});

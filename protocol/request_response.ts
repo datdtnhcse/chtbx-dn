@@ -21,6 +21,8 @@ export type ResponseMap = {
 		type: typeof ResponseType[K];
 	};
 };
+export const requestKey = (req: Request) => RequestType[req.type];
+export const responseKey = (res: Response) => ResponseType[res.type];
 
 // LOGIN
 

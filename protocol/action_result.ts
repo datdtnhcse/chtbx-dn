@@ -9,7 +9,8 @@ export type Action =
 	| RegisterAction
 	| SyncAction
 	| ConnectAction
-	| HelloAction;
+	| HelloAction
+	| SendMessageAction;
 export type Result =
 	| LoginResult
 	| RegisterResult
@@ -23,6 +24,7 @@ export enum ActionType {
 	SYNC = 2,
 	CONNECT = 3,
 	HELLO = 4,
+	SEND_MESSAGE = 5,
 }
 export enum ResultType {
 	REGISTER = 0,
@@ -41,6 +43,8 @@ export type ResultMap = {
 		type: typeof ResultType[K];
 	};
 };
+export const actionKey = (act: Action) => ActionType[act.type];
+export const resultKey = (res: Result) => ResultType[res.type];
 
 export type LoginAction = {
 	type: ActionType.LOGIN;
@@ -66,10 +70,10 @@ export type SyncAction = {
 };
 export type SyncResult = {
 	type: ResultType.SYNC;
-	state: State;
+	state: GUIState;
 };
 
-export type State = {
+export type GUIState = {
 	username: string | null;
 	friends: Friend[];
 };
@@ -90,4 +94,9 @@ export type HelloAction = {
 export type HelloResult = {
 	type: ResultType.HELLO;
 	username: string;
+};
+
+export type SendMessageAction = {
+	type: ActionType.SEND_MESSAGE;
+	message: string;
 };

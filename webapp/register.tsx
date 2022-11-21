@@ -2,7 +2,7 @@ import { useSignal } from "@preact/signals";
 import { ActionType } from "../protocol/action_result.ts";
 import { RegisterStatus } from "../protocol/request_response.ts";
 import Login from "./login.tsx";
-import { clientConnection } from "./state.ts";
+import { wsC2SConnection } from "./state.ts";
 
 export default function Register() {
 	const inputUsername = useSignal("");
@@ -13,17 +13,16 @@ export default function Register() {
 	const tologin = () => {
 		loginsignal.value = "OK";
 	};
-	const register = () => {
+	const register = async () => {
 		if (inputComPassword.value != inputPassword.value) {
 			status.value = "Wrong comfirm password!!";
 		} else {
-			clientConnection.on("REGISTER", (res) => {
-				if (res.status == RegisterStatus.OK) {
-					status.value = "Đăng ký thành công!!";
-				}
-				status.value = RegisterStatus[res.status];
-			}, { once: true });
-			clientConnection.send({
+			const res = await wsC2SConnection.wait("REGISTER");
+			if (res.status == RegisterStatus.OK) {
+				status.value = "Đăng ký thành công!!";
+			}
+			status.value = RegisterStatus[res.status];
+			wsC2SConnection.send({
 				type: ActionType.REGISTER,
 				username: inputUsername.value,
 				password: inputPassword.value,

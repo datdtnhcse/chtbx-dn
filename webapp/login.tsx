@@ -2,7 +2,7 @@ import { useSignal } from "@preact/signals";
 import { ActionType } from "../protocol/action_result.ts";
 import { LoginStatus } from "../protocol/request_response.ts";
 import Register from "./register.tsx";
-import { clientConnection, state } from "./state.ts";
+import { state, wsC2SConnection } from "./state.ts";
 
 export default function Login() {
 	const registersignal = useSignal("");
@@ -13,13 +13,13 @@ export default function Login() {
 		registersignal.value = "OK";
 	};
 	const login = () => {
-		clientConnection.on("LOGIN", (res) => {
+		wsC2SConnection.on("LOGIN", (res) => {
 			if (res.status == LoginStatus.OK) {
 				state.username.value = inputUsername.value;
 			}
 			status.value = LoginStatus[res.status];
 		}, { once: true });
-		clientConnection.send({
+		wsC2SConnection.send({
 			type: ActionType.LOGIN,
 			username: inputUsername.value,
 			password: inputPassword.value,
