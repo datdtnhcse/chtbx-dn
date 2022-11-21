@@ -1,6 +1,6 @@
-import { useSignalEffect, useSignal } from "@preact/signals";
+import { useSignal, useSignalEffect } from "@preact/signals";
 import { ActionType } from "../protocol/action_result.ts";
-import { clientConnection, state , friendConnections} from "./state.ts";
+import { clientConnection, friendConnections, state } from "./state.ts";
 
 export default function Dash() {
 	const message = useSignal("");
@@ -13,53 +13,53 @@ export default function Dash() {
 		clientConnection.act({ type: ActionType.SYNC });
 	});
 
-
 	return (
-			<ul>
-				{state.friends.value.map((friend) => (
-					<div>
-						<button
-							onClick={() =>{
-								const x = document.getElementById('myForm')!;
-								if (x.style.display === 'none') {
-									x.style.display = 'block';
-								} else {
-									x.style.display = 'none';
-								}
-								clientConnection.act({
-									type: ActionType.CONNECT,
-									username: friend.username,
-								})}
+		<ul>
+			{state.friends.value.map((friend) => (
+				<div>
+					<button
+						onClick={() => {
+							const x = document.getElementById("myForm")!;
+							if (x.style.display === "none") {
+								x.style.display = "block";
+							} else {
+								x.style.display = "none";
 							}
-						>
-							{friend.username}
-						</button>
-						<div class="chat-popup" id="myForm" style="display: none">
+							clientConnection.act({
+								type: ActionType.CONNECT,
+								username: friend.username,
+							});
+						}}
+					>
+						{friend.username}
+					</button>
+					<div class="chat-popup" id="myForm" style="display: none">
 						<label>
 							<input
 								type="message"
 								value={message}
-								onInput={(e) => message.value = e.currentTarget.value}
+								onInput={(e) =>
+									message.value = e.currentTarget.value}
 							/>
 						</label>
-							<button onClick={() =>{
+						<button
+							onClick={() => {
 								friendConnections.get(friend.username)!.act({
 									type: ActionType.SEND_MESSAGE,
 									mess: message.value,
-								})}}
-								>
-									Send
-								</button>
-						</div>
+								});
+							}}
+						>
+							Send
+						</button>
 					</div>
-				))}
-			</ul>
-
-	)
+				</div>
+			))}
+		</ul>
+	);
 
 	// return (
 	// 	<ul>
-
 
 	// 		{state.friends.value.map((friend) => (
 

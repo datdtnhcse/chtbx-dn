@@ -25,7 +25,6 @@ export enum ActionType {
 	CONNECT = 3,
 	HELLO = 4,
 	SEND_MESSAGE = 5,
-
 }
 export enum ResultType {
 	REGISTER = 0,
