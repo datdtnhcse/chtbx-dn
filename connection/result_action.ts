@@ -38,7 +38,6 @@ export class WebSocketResultAction {
 	async listen() {
 		return await new Promise<void>((resolve) => {
 			this.#socket.addEventListener("open", (_) => {
-				console.log("connection ready");
 				this.#resolve();
 			});
 			this.#socket.addEventListener("message", (e) => {

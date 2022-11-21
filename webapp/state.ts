@@ -16,6 +16,7 @@ url.protocol = "ws";
 url.port = `${window.WEBSOCKET_PORT}`;
 const mainSocket = new WebSocket(url);
 export const clientConnection = new WebSocketActionResult(mainSocket);
+
 clientConnection.listen();
 
 // local data
@@ -43,7 +44,7 @@ clientConnection.on("SYNC", (res) => {
 	}
 });
 
-const friendConnections: Map<string, WebSocketActionResult> = new Map();
+export const friendConnections: Map<string, WebSocketActionResult> = new Map();
 
 clientConnection.on("CONNECT", (res) => {
 	url.port = `${window.SUBWEBSOCKET_PORT}`;

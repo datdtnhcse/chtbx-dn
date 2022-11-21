@@ -1,7 +1,7 @@
 import { TCPMessageMessage } from "../connection/message_message.ts";
 import { TCPRequestResponse } from "../connection/request_response.ts";
 import { WebSocketResultAction } from "../connection/result_action.ts";
-import { P2P_PORT, SERVER_HOST, SERVER_PORT, WEBSOCKET_PORT, SUBWEBSOCKET_PORT } from "../env.ts";
+import { P2P_PORT, SERVER_HOST, SERVER_PORT, WEBSOCKET_PORT, SUBWEBSOCKET_PORT ,WEBAPP_PORT } from "../env.ts";
 import { ResultType, State } from "../protocol/action_result.ts";
 import { MessageType } from "../protocol/message.ts";
 import {
@@ -18,6 +18,7 @@ import {
 const webSocketServer = Deno.listen({ port: WEBSOCKET_PORT, transport: "tcp" });
 const subWebSocketServer = Deno.listen({ port: SUBWEBSOCKET_PORT, transport: "tcp" });
 const p2pServer = Deno.listen({ port: P2P_PORT, transport: "tcp" });
+
 
 // Also, it has to connect to server
 
@@ -36,8 +37,11 @@ let webAppConnection: WebSocketResultAction | null = null;
 if (p2pServer.addr.transport !== "tcp") throw "unreachable";
 const ip = p2pServer.addr.hostname;
 const port = p2pServer.addr.port;
-
 const state: State = { username: null, friends: [] };
+const friendConnections: Map<
+	string,
+	[TCPMessageMessage | null, TCPMessageMessage]
+> = new Map();
 
 // WEB SOCKET SERVER
 serveWebSocket();
@@ -72,6 +76,9 @@ async function serveWebSocket() {
 		}
 	}
 }
+
+console.log(`Your webSocket connection: \n http://localhost:${WEBAPP_PORT}` )
+// WebSocket P2P
 serveSubWebSocket();
 async function serveSubWebSocket() {
 	for await (const connection of subWebSocketServer) {
@@ -95,6 +102,50 @@ async function serveSubWebSocket() {
 	}
 }
 
+// TCP P2P
+serveP2P();
+async function serveP2P() {
+	for await (const conn of p2pServer) {
+		///// get connection
+		if (webAppConnection === null) {
+			conn.close();
+			continue;
+		}
+		const ourEnd = new TCPMessageMessage(conn);
+		ourEnd.listen();
+		const friend = await new Promise<Friend | undefined>((resolve) => {
+			ourEnd.on("HELLO", (msg) => {
+				console.log(msg.username, "connect P2P with me")
+				resolve(
+					state.friends.find((friend) =>
+						friend.username === msg.username
+					),
+				);
+			}, { once: true })
+		}
+		);
+		if (!friend) throw "no friend with that id exist";
+		const ends = friendConnections.get(friend.username);
+		if (ends && ends[1]) {
+			ends[0] = ourEnd;
+		} else {
+			const theirEnd = new TCPMessageMessage(
+				await Deno.connect({ hostname: friend.ip, port: friend.port }),
+			);
+			theirEnd.listen().finally(() => {
+				friendConnections.delete(friend.username);
+			});
+			friendConnections.set(friend.username, [ourEnd, theirEnd]);
+		}
+		webAppConnection.result({
+			type: ResultType.CONNECT,
+			username: friend.username,
+		});
+
+	}
+}
+
+// Handle function
 async function handleWebSocketClientServer(socket: WebSocket) {
 	console.log("New connection");
 	try {
@@ -141,11 +192,11 @@ async function handleWebSocketClientServer(socket: WebSocket) {
 
 		webAppConnection.on("SYNC", (_) => {
 			if (state.username !== null) {
-				console.log("fetching friends");
+				console.log("fetching friends ...");
 				serverConnection.request({ type: RequestType.FRIEND_LIST });
 				serverConnection.on("FRIEND_LIST", (res) => {
 					state.friends = res.friends;
-					console.log(state.friends);
+					console.log("You have", state.friends.length,"friend: \n",state.friends);
 					webAppConnection?.result({ type: ResultType.SYNC, state });
 				}, { once: true });
 			} else {
@@ -192,55 +243,37 @@ async function handleWebSocketP2P(socket: WebSocket) {
 	});
 	ourEnd.listen();
 	theirEnd.listen();
-	console.log("resolved friend connection");
+	console.log("resolved friend connection"); //// is connect
+
+	////////////////////////////////
+
 	ourEnd.on("SEND_MESSAGE", (msg) => {
-		console.log(msg);
-	});
-	theirEnd.message({
-		type: MessageType.SEND_MESSAGE,
-		content: "Hello",
-	});
-}
-
-const friendConnections: Map<
-	string,
-	[TCPMessageMessage | null, TCPMessageMessage]
-> = new Map();
-
-serveP2P();
-async function serveP2P() {
-	for await (const conn of p2pServer) {
-		if (webAppConnection === null) {
-			conn.close();
-			continue;
-		}
-		const ourEnd = new TCPMessageMessage(conn);
-		ourEnd.listen();
-		const friend = await new Promise<Friend | undefined>((resolve) =>
-			ourEnd.on("HELLO", (msg) => {
-				resolve(
-					state.friends.find((friend) =>
-						friend.username === msg.username
-					),
-				);
-			}, { once: true })
-		);
-		if (!friend) throw "no friend with that id exist";
-		const ends = friendConnections.get(friend.username);
-		if (ends && ends[1]) {
-			ends[0] = ourEnd;
-		} else {
-			const theirEnd = new TCPMessageMessage(
-				await Deno.connect({ hostname: friend.ip, port: friend.port }),
-			);
-			theirEnd.listen().finally(() => {
-				friendConnections.delete(friend.username);
-			});
-			friendConnections.set(friend.username, [ourEnd, theirEnd]);
-		}
-		webAppConnection.result({
-			type: ResultType.CONNECT,
-			username: friend.username,
+		console.log("ourEnd recieve {SEND_MESSAGE}:",msg);
+		webAppChatConnection.result({
+			type : ResultType.SEND_MESSAGE,
+			mess: msg.content
 		});
-	}
+
+	});
+	ourEnd.on("HELLO", (msg) => {
+		console.log("ourEnd recieve {HELLO}:",msg);
+	});
+
+	//// test
+	theirEnd.message({
+		type: MessageType.HELLO,
+		username: "Hello!",
+	});
+	/////
+
+	console.log("all listen from friends is done");
+	webAppChatConnection.on("SEND_MESSAGE", (act) => {
+		console.log("webAppChatConnection recieve {SEND_MESSAGE}:", act);
+		theirEnd.message({
+			type: MessageType.SEND_MESSAGE,
+			content: act.mess,
+		});
+	});
 }
+
+

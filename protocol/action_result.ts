@@ -1,7 +1,6 @@
 /**
  * Data types for working with webapp-client-server connection
  */
-
 import { Friend, LoginStatus, RegisterStatus } from "./request_response.ts";
 
 export type Action =
@@ -9,13 +8,15 @@ export type Action =
 	| RegisterAction
 	| SyncAction
 	| ConnectAction
-	| HelloAction;
+	| HelloAction
+	| MessageAction;
 export type Result =
 	| LoginResult
 	| RegisterResult
 	| SyncResult
 	| ConnectResult
-	| HelloResult;
+	| HelloResult
+	| MessageResult;
 
 export enum ActionType {
 	REGISTER = 0,
@@ -23,6 +24,8 @@ export enum ActionType {
 	SYNC = 2,
 	CONNECT = 3,
 	HELLO = 4,
+	SEND_MESSAGE = 5,
+
 }
 export enum ResultType {
 	REGISTER = 0,
@@ -30,6 +33,7 @@ export enum ResultType {
 	SYNC = 2,
 	CONNECT = 3,
 	HELLO = 4,
+	SEND_MESSAGE = 5,
 }
 
 export type LoginAction = {
@@ -80,4 +84,12 @@ export type HelloAction = {
 export type HelloResult = {
 	type: ResultType.HELLO;
 	username: string;
+};
+export type MessageAction = {
+	type: ActionType.SEND_MESSAGE;
+	mess: string;
+};
+export type MessageResult = {
+	type: ResultType.SEND_MESSAGE;
+	mess: string;
 };
