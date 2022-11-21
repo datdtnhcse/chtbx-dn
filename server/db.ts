@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS accounts (
 	id 			INTEGER 	PRIMARY KEY AUTOINCREMENT,
 	username 	TEXT 		NOT NUll UNIQUE,
 	password 	TEXT 		NOT NULL,
-	ip 			TEXT
+	ip 			TEXT,
+	port 		INTEGER
 );
 INSERT INTO accounts(username, password) VALUES ('khang', '123456');
 INSERT INTO accounts(username, password) VALUES ('dat', '123456');
@@ -22,28 +23,47 @@ CREATE TABLE IF NOT EXISTS friends (
 
 // accounts Query 
 
-export const findAccount = db.prepareQuery<
+export const findAccountByUsername = db.prepareQuery<
 	never,
-	{ id: number; username: string; password: string; ip: string | null },
+	{
+		id: number;
+		username: string;
+		password: string;
+		ip: string | null;
+		port: number | null;
+	},
 	{ username: string }
 >(
-	"SELECT id, username, password, ip FROM accounts WHERE username = :username;",
+	"SELECT id, username, password, ip, port FROM accounts WHERE username = :username;",
+);
+export const findAccountById = db.prepareQuery<
+	never,
+	{
+		id: number;
+		username: string;
+		password: string;
+		ip: string | null;
+		port: number | null;
+	},
+	{ id: number }
+>(
+	"SELECT id, username, password, ip, port FROM accounts WHERE id = :id;",
 );
 export const addAccount = db.prepareQuery<
 	never,
 	never,
-	{ username: string; password: string }
+	{ username: string; password: string; ip: string | null; port: number | null}
 >(
-	"INSERT INTO accounts(username, password) VALUES (:username, :password);",
+	"INSERT INTO accounts(username, password, ip, port) VALUES (:username, :password, :ip, :port);",
 );
 
 export const setIP = db.prepareQuery<
 	never,
 	never,
-	{ id: number; ip: string | null }
+	{ id: number; ip: string | null; port: number | null }
 >(`
 UPDATE accounts
-SET ip = :ip
+SET ip = :ip, port = :port
 WHERE id = :id
 ;`);
 
@@ -66,3 +86,12 @@ UPDATE friends
 SET state = 'friended'
 WHERE friendId = :id AND id = :friendId 
 ;`);
+
+export const denyRequest = db.prepareQuery<
+	never,
+	never,
+	{ id: number; friendId: number }
+>(
+	"DELETE FROM friends WHERE id = :id AND friendId = :friendId;"
+
+);

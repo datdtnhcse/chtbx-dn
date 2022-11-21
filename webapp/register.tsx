@@ -1,7 +1,8 @@
 import { useSignal } from "@preact/signals";
-import { RegisterStatus, RequestType } from "../message.ts";
+import { ActionType } from "../protocol/action_result.ts";
+import { RegisterStatus } from "../protocol/request_response.ts";
 import Login from "./login.tsx";
-import { clientServerSocket } from "./websocket.ts";
+import { clientConnection } from "./state.ts";
 
 export default function Register() {
 	const inputUsername = useSignal("");
@@ -12,19 +13,21 @@ export default function Register() {
 	const tologin = () => {
 		loginsignal.value = "OK";
 	};
-	const register = async () => {
+	const register = () => {
 		if (inputComPassword.value != inputPassword.value) {
 			status.value = "Wrong comfirm password!!";
 		} else {
-			const res = await clientServerSocket.request({
-				type: RequestType.REGISTER,
+			clientConnection.on("REGISTER", (res) => {
+				if (res.status == RegisterStatus.OK) {
+					status.value = "Đăng ký thành công!!";
+				}
+				status.value = RegisterStatus[res.status];
+			}, { once: true });
+			clientConnection.act({
+				type: ActionType.REGISTER,
 				username: inputUsername.value,
 				password: inputPassword.value,
 			});
-			status.value = RegisterStatus[res.status];
-			if (res.status == RegisterStatus.OK) {
-				status.value = "Đăng ký thành công!!";
-			}
 		}
 	};
 
