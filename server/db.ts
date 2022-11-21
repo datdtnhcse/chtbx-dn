@@ -14,9 +14,9 @@ INSERT INTO accounts(username, password) VALUES ('khang', '123456');
 INSERT INTO accounts(username, password) VALUES ('dat', '123456');
 
 CREATE TABLE IF NOT EXISTS friends (
-	id 			INTEGER 									NOT NULL,
-	friendId 	INTEGER 									NOT NULL,
-	state 		TEXT CHECK(state IN ('sent', 'friended'))   NOT NULL, 
+	id 			INTEGER 												NOT NULL,
+	friendId 	INTEGER 												NOT NULL,
+	state 		TEXT CHECK(state IN ('sent', 'received', 'friended'))   NOT NULL, 
 	PRIMARY KEY (id, friendId)
 );
 `);
@@ -53,18 +53,21 @@ export const addAccount = db.prepareQuery<
 	never,
 	never,
 	{ username: string; password: string; ip: string | null; port: number | null}
->(
-	"INSERT INTO accounts(username, password, ip, port) VALUES (:username, :password, :ip, :port);",
-);
+>(`
+	INSERT 
+	INTO 	accounts(username, password, ip, port) 
+	VALUES 	(:username, :password, :ip, :port)
+;`);
 
 export const setIP = db.prepareQuery<
 	never,
 	never,
 	{ id: number; ip: string | null; port: number | null }
 >(`
-UPDATE accounts
-SET ip = :ip, port = :port
-WHERE id = :id
+	UPDATE 	accounts
+	SET 	ip = :ip, 
+			port = :port
+	WHERE 	id = :id
 ;`);
 
 // friends Query
@@ -73,25 +76,40 @@ export const sendRequest = db.prepareQuery<
 	never,
 	never,
 	{ id: number; friendId: number }
->(
-	"INSERT INTO friends(id, friendId, state) VALUES (:id, :friendId, 'sent');",
-);
+>(`
+	INSERT 
+	INTO 	friends(id, friendId, state) 
+	VALUES 	(:id, :friendId, 'sent')
+;`);
+
+export const received = db.prepareQuery<
+	never,
+	never,
+	{ id: number; friendId: number }
+>(`
+	INSERT 
+	INTO 	friends(id, friendId, state) 
+	VALUES 	(:id, :friendId, 'received')
+;`);
 
 export const acceptRequest = db.prepareQuery<
 	never,
 	never,
 	{ id: number; friendId: number }
 >(`
-UPDATE friends
-SET state = 'friended'
-WHERE friendId = :id AND id = :friendId 
+	UPDATE 	friends
+	SET 	state = 'friended'
+	WHERE 	(id = :id AND friendId = :friendId)  
+   	   OR 	(id = :friendId AND friendId = :Id)  
 ;`);
 
 export const denyRequest = db.prepareQuery<
 	never,
 	never,
 	{ id: number; friendId: number }
->(
-	"DELETE FROM friends WHERE id = :id AND friendId = :friendId;"
-
-);
+>(`
+	DELETE 
+	FROM 	friends 
+	WHERE 	(id = :id AND friendId = :friendId)  
+	   OR 	(id = :friendId AND friendId = :Id)
+;`);
