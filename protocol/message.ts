@@ -7,6 +7,11 @@ export enum MessageType {
 	HELLO = 0,
 	SEND_MESSAGE = 1,
 }
+export type MessageMap = {
+	[K in keyof typeof MessageType]: Message & { //
+		type: typeof MessageType[K];
+	};
+};
 
 export type SendMessageMessage = {
 	type: MessageType.SEND_MESSAGE;

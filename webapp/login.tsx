@@ -19,7 +19,7 @@ export default function Login() {
 			}
 			status.value = LoginStatus[res.status];
 		}, { once: true });
-		clientConnection.act({
+		clientConnection.send({
 			type: ActionType.LOGIN,
 			username: inputUsername.value,
 			password: inputPassword.value,

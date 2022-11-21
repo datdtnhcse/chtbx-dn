@@ -10,7 +10,7 @@ export default function Dash() {
 	// 	mess: message.value,
 	// }}
 	useSignalEffect(() => {
-		clientConnection.act({ type: ActionType.SYNC });
+		clientConnection.send({ type: ActionType.SYNC });
 	});
 
 	return (
@@ -25,7 +25,7 @@ export default function Dash() {
 							} else {
 								x.style.display = "none";
 							}
-							clientConnection.act({
+							clientConnection.send({
 								type: ActionType.CONNECT,
 								username: friend.username,
 							});
@@ -44,7 +44,7 @@ export default function Dash() {
 						</label>
 						<button
 							onClick={() => {
-								friendConnections.get(friend.username)!.act({
+								friendConnections.get(friend.username)!.send({
 									type: ActionType.SEND_MESSAGE,
 									mess: message.value,
 								});
