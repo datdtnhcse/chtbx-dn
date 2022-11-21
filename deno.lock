@@ -212,6 +212,7 @@
     "https://deno.land/x/dotenv@v3.2.0/util.ts": "693730877b13f8ead2b79b2aa31e2a0652862f7dc0c5f6d2f313f4d39c7b7670",
     "https://deno.land/x/esbuild@v0.15.13/mod.d.ts": "12e96a8d05c8e2c5638aa9cb09f24222134d437abb2f3f52de0156adb2270719",
     "https://deno.land/x/esbuild@v0.15.13/mod.js": "b826d8a942518a33da4a136aed2b749c6ad566f8aa2c51e5736392f2e34b9354",
+    "https://deno.land/x/getport@v2.1.2/mod.ts": "e1d629c14008fc1da85278615c55e9356c206d35054577c49639248e3c036f17",
     "https://deno.land/x/sqlite@v3.7.0/build/sqlite.d.ts": "12908ced1670f96d5dc39aebb0d659630136fa6523881e4712cfb20b122dd324",
     "https://deno.land/x/sqlite@v3.7.0/build/sqlite.js": "cc55fef9cd124b2acb624899a5fad413834f4701bcfc21ac275844b822466292",
     "https://deno.land/x/sqlite@v3.7.0/build/vfs.js": "08533cc78fb29b9d9bd62f6bb93e5ef333407013fed185776808f11223ba0e70",

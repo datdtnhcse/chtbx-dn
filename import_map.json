@@ -4,7 +4,6 @@
 		"preact/jsx-runtime": "https://esm.sh/preact@10.11.3/jsx-runtime",
 		"preact/jsx-dev-runtime": "https://esm.sh/preact@10.11.3/jsx-dev-runtime",
 		"@preact/signals": "https://esm.sh/@preact/signals@1.1.2",
-		"std/": "https://deno.land/std@0.163.0/",
-		"dotenv/load": "https://deno.land/x/dotenv@v3.2.0/load.ts"
+		"std/": "https://deno.land/std@0.163.0/"
 	}
 }

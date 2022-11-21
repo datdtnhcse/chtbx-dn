@@ -27,7 +27,7 @@ export default function Dash() {
 							}
 							wsC2SConnection.send({
 								type: ActionType.CONNECT,
-								username: friend.username,
+								username: "dat",
 							});
 						}}
 					>

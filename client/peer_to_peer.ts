@@ -40,7 +40,7 @@ serveWSServer(wsP2PServer, async (socket: WebSocket) => {
 	wsP2PConnection.on("SEND_MESSAGE", (msg) => {
 		tcpP2PConnection.send({
 			type: MessageType.SEND_MESSAGE,
-			content: msg.message,
+			content: msg.mess,
 		});
 	});
 });
