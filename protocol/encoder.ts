@@ -9,6 +9,7 @@ import {
 import {
 	FriendListRequest,
 	FriendListResponse,
+	FriendStatus,
 	LoginRequest,
 	LoginResponse,
 	RegisterRequest,
@@ -35,6 +36,16 @@ export abstract class Encoder<T> {
 		this.writer.write(new Uint8Array(parts));
 	}
 
+	byte(i: number) {
+		if (i >= Math.pow(2, 8)) {
+			throw Error(`num bigger than 1 bytes: ${i}`);
+		}
+		this.writer.write(
+			new Uint8Array([
+				i,
+			]),
+		);
+	}
 	twoBytes(m: number) {
 		if (m >= Math.pow(2, 16)) {
 			throw Error(`num bigger than 2 bytes: ${m}`);
@@ -61,7 +72,6 @@ export abstract class Encoder<T> {
 			new Uint8Array([...new TextEncoder().encode(s), 0]),
 		);
 	}
-
 	abstract encode(t: T): void;
 }
 
@@ -78,7 +88,7 @@ export class RequestEncoder extends Encoder<Request> {
 		}
 	}
 	login(req: LoginRequest) {
-		this.writer.write(new Uint8Array([RequestType.LOGIN]));
+		this.byte(RequestType.LOGIN);
 		this.lengthStr(req.username);
 		this.lengthStr(req.password);
 		this.ip(req.ip);
@@ -86,13 +96,13 @@ export class RequestEncoder extends Encoder<Request> {
 		this.writer.flush();
 	}
 	register(req: RegisterRequest) {
-		this.writer.write(new Uint8Array([RequestType.REGISTER]));
+		this.byte(RequestType.REGISTER);
 		this.lengthStr(req.username);
 		this.lengthStr(req.password);
 		this.writer.flush();
 	}
 	friendList(_: FriendListRequest) {
-		this.writer.write(new Uint8Array([RequestType.FRIEND_LIST]));
+		this.byte(RequestType.FRIEND_LIST);
 		this.writer.flush();
 	}
 }
@@ -110,20 +120,27 @@ export class ResponseEncoder extends Encoder<Response> {
 		}
 	}
 	login(res: LoginResponse) {
-		this.writer.write(new Uint8Array([ResponseType.LOGIN, res.status]));
+		this.byte(ResponseType.LOGIN);
+		this.byte(res.status);
 		this.writer.flush();
 	}
 	register(res: RegisterResponse) {
-		this.writer.write(new Uint8Array([ResponseType.REGISTER, res.status]));
+		this.byte(ResponseType.REGISTER);
+		this.byte(res.status);
 		this.writer.flush();
 	}
 	friendList(res: FriendListResponse) {
-		this.writer.write(new Uint8Array([ResponseType.FRIEND_LIST]));
+		this.byte(ResponseType.FRIEND_LIST);
 		this.twoBytes(res.friends.length);
 		for (const friend of res.friends) {
 			this.lengthStr(friend.username);
-			this.ip(friend.ip);
-			this.twoBytes(friend.port);
+			if (friend.state.type == FriendStatus.OFFLINE) {
+				this.byte(FriendStatus.OFFLINE);
+			} else {
+				this.byte(FriendStatus.ONLINE);
+				this.ip(friend.state.ip);
+				this.twoBytes(friend.state.port);
+			}
 		}
 		this.writer.flush();
 	}
@@ -149,7 +166,7 @@ export class MessageEncoder extends Encoder<Message> {
 		this.writer.flush();
 	}
 	hello(msg: HelloMessage) {
-		this.writer.write(new Uint8Array([MessageType.HELLO]));
+		this.byte(MessageType.HELLO);
 		this.lengthStr(msg.username);
 		this.writer.flush();
 	}

@@ -1,4 +1,5 @@
 import { DB } from "https://deno.land/x/sqlite@v3.7.0/mod.ts";
+import { Friend, FriendStatus } from "../protocol/request_response.ts";
 
 const db = new DB();
 
@@ -19,6 +20,12 @@ CREATE TABLE IF NOT EXISTS friends (
 	state 		TEXT CHECK(state IN ('sent', 'received', 'friended'))   NOT NULL,
 	PRIMARY KEY (id, friendId)
 );
+
+INSERT INTO friends(id, friendId ,state ) VALUES (1, 2, 'friended');
+INSERT INTO friends(id, friendId ,state) VALUES (2,1, 'friended');
+
+
+
 `);
 
 // accounts Query
@@ -116,3 +123,41 @@ export const denyRequest = db.prepareQuery<
 	WHERE 	(id = :id AND friendId = :friendId)
 	   OR 	(id = :friendId AND friendId = :Id)
 ;`);
+export const getFriendlist = (id: number): Friend[] => {
+	const query = db.prepareQuery<
+		never,
+		{
+			username: string;
+			ip: string | null;
+			port: number | null;
+		},
+		{ id: number }
+	>(`
+		SELECT accounts.username, accounts.ip , accounts.port
+		FROM accounts JOIN friends
+		ON accounts.id = friends.friendId
+		WHERE friends.id = :id
+	`);
+	const entries = query.allEntries({ id });
+	const friends: Friend[] = [];
+	for (let i = 0; i < entries.length; i++) {
+		if (entries[i].ip == null || entries[i].port == null) {
+			friends.push({
+				username: entries[i].username,
+				state: {
+					type: FriendStatus.OFFLINE,
+				},
+			});
+		} else {
+			friends.push({
+				username: entries[i].username,
+				state: {
+					type: FriendStatus.ONLINE,
+					ip: entries[i].ip!,
+					port: entries[i].port!,
+				},
+			});
+		}
+	}
+	return friends;
+};

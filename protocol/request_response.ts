@@ -75,6 +75,12 @@ export type FriendListResponse = {
 };
 export type Friend = {
 	username: string;
-	ip: string;
-	port: number;
+	state:
+		| { type: FriendStatus.OFFLINE }
+		| { type: FriendStatus.ONLINE; ip: string; port: number };
 };
+
+export enum FriendStatus {
+	OFFLINE = 0,
+	ONLINE = 1,
+}

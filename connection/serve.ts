@@ -1,4 +1,4 @@
-export async function serveTCPServer(
+export async function serveTCP(
 	server: Deno.Listener,
 	handler: (conn: Deno.Conn) => unknown,
 ): Promise<void> {
@@ -13,14 +13,14 @@ export function serveHTTPServer(
 	handler: (req: Request) => Response | Promise<Response>,
 ) {
 	console.log("HTTP at", server.addr);
-	serveTCPServer(server, async (conn) => {
+	serveTCP(server, async (conn) => {
 		for await (const { request, respondWith } of Deno.serveHttp(conn)) {
 			await respondWith(handler(request));
 		}
 	});
 }
 
-export function serveWSServer(
+export function serveWS(
 	server: Deno.Listener,
 	handler: (ws: WebSocket) => unknown,
 ) {

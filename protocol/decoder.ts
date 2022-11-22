@@ -10,6 +10,7 @@ import {
 	Friend,
 	FriendListRequest,
 	FriendListResponse,
+	FriendStatus,
 	LoginRequest,
 	LoginResponse,
 	RegisterRequest,
@@ -134,10 +135,28 @@ export class ResponseDecoder extends Decoder<Response> {
 		const len = await this.twoBytes();
 		const friends: Friend[] = new Array(len);
 		for (let i = 0; i < len; i++) {
+			const username = await this.lenStr();
+			let ip = null;
+			let port = null;
+			const type = await this.byte();
+			if (type == FriendStatus.ONLINE) {
+				ip = await this.ip();
+				port = await this.twoBytes();
+				friends[i] = {
+					username,
+					state: {
+						type,
+						ip,
+						port,
+					},
+				};
+				continue;
+			}
 			friends[i] = {
-				username: await this.lenStr(),
-				ip: await this.ip(),
-				port: await this.twoBytes(),
+				username,
+				state: {
+					type,
+				},
 			};
 		}
 		return { type: ResponseType.FRIEND_LIST, friends };
