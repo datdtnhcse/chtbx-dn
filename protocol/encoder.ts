@@ -17,7 +17,7 @@ import {
 	Request,
 	RequestType,
 	Response,
-	ResponseType
+	ResponseType,
 } from "../protocol/request_response.ts";
 
 export abstract class Encoder<T> {
@@ -36,13 +36,15 @@ export abstract class Encoder<T> {
 		this.writer.write(new Uint8Array(parts));
 	}
 
-	byte (i: number){
-		if (i >= Math.pow(2,8)){
+	byte(i: number) {
+		if (i >= Math.pow(2, 8)) {
 			throw Error(`num bigger than 1 bytes: ${i}`);
 		}
-		this.writer.write(new Uint8Array([
-			i
-		]));
+		this.writer.write(
+			new Uint8Array([
+				i,
+			]),
+		);
 	}
 	twoBytes(m: number) {
 		if (m >= Math.pow(2, 16)) {
@@ -118,7 +120,7 @@ export class ResponseEncoder extends Encoder<Response> {
 		}
 	}
 	login(res: LoginResponse) {
-		this.byte(ResponseType.LOGIN)
+		this.byte(ResponseType.LOGIN);
 		this.byte(res.status);
 		this.writer.flush();
 	}
@@ -132,9 +134,9 @@ export class ResponseEncoder extends Encoder<Response> {
 		this.twoBytes(res.friends.length);
 		for (const friend of res.friends) {
 			this.lengthStr(friend.username);
-			if (friend.state.type == FriendStatus.OFFLINE){
+			if (friend.state.type == FriendStatus.OFFLINE) {
 				this.byte(FriendStatus.OFFLINE);
-			} else{
+			} else {
 				this.byte(FriendStatus.ONLINE);
 				this.ip(friend.state.ip);
 				this.twoBytes(friend.state.port);

@@ -138,8 +138,8 @@ export class ResponseDecoder extends Decoder<Response> {
 			const username = await this.lenStr();
 			let ip = null;
 			let port = null;
-		 	const type = await this.byte();
-			if (type == FriendStatus.ONLINE){
+			const type = await this.byte();
+			if (type == FriendStatus.ONLINE) {
 				ip = await this.ip();
 				port = await this.twoBytes();
 				friends[i] = {
@@ -148,15 +148,15 @@ export class ResponseDecoder extends Decoder<Response> {
 						type,
 						ip,
 						port,
-					}
+					},
 				};
 				continue;
 			}
 			friends[i] = {
 				username,
 				state: {
-					type
-				}
+					type,
+				},
 			};
 		}
 		return { type: ResponseType.FRIEND_LIST, friends };

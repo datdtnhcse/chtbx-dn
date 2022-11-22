@@ -109,8 +109,7 @@ serveTCP(tcpC2SConnection, (conn) => {
 		console.log(account);
 		if (!account) throw "account not found in database: " + id;
 
-
-		const friends = getFriendlist(id)
+		const friends = getFriendlist(id);
 
 		// [{
 		// 	username: account.username,

@@ -123,48 +123,44 @@ export const denyRequest = db.prepareQuery<
 	WHERE 	(id = :id AND friendId = :friendId)
 	   OR 	(id = :friendId AND friendId = :Id)
 ;`);
-export const getFriendlist = (id: number): Friend[]=>  {
-
+export const getFriendlist = (id: number): Friend[] => {
 	const query = db.prepareQuery<
 		never,
 		{
-			username : string,
-			ip : string | null,
-            port : number | null,
+			username: string;
+			ip: string | null;
+			port: number | null;
 		},
-		{id: number}
+		{ id: number }
 	>(`
 		SELECT accounts.username, accounts.ip , accounts.port
 		FROM accounts JOIN friends
 		ON accounts.id = friends.friendId
 		WHERE friends.id = :id
-	`)
+	`);
 	const entries = query.allEntries({ id });
 	const friends: Friend[] = [];
 	for (let i = 0; i < entries.length; i++) {
 		let state;
-		if (entries[i].ip ==null || entries[i].port == null) {
-			 state = {
-				type: FriendStatus.OFFLINE
-			}
+		if (entries[i].ip == null || entries[i].port == null) {
+			state = {
+				type: FriendStatus.OFFLINE,
+			};
 			friends.push({
 				username: entries[i].username,
-				 state: state
-
-			})
-		}else{
+				state: state,
+			});
+		} else {
 			state = {
 				type: FriendStatus.ONLINE,
 				ip: entries[i].ip!,
-				port: entries[i].port!
-
-			}
+				port: entries[i].port!,
+			};
 			friends.push({
 				username: entries[i].username,
-				 state
-
-			})
+				state,
+			});
 		}
 	}
 	return friends;
-}
+};
