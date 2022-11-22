@@ -142,22 +142,20 @@ export const getFriendlist = (id: number): Friend[] => {
 	const friends: Friend[] = [];
 	for (let i = 0; i < entries.length; i++) {
 		if (entries[i].ip == null || entries[i].port == null) {
-			const state = {
-				type: FriendStatus.OFFLINE,
-			};
 			friends.push({
 				username: entries[i].username,
-				state: state,
+				state: {
+					type: FriendStatus.OFFLINE,
+				},
 			});
 		} else {
-			const state = {
-				type: FriendStatus.ONLINE,
-				ip: entries[i].ip!,
-				port: entries[i].port!,
-			};
 			friends.push({
 				username: entries[i].username,
-				state,
+				state: {
+					type: FriendStatus.ONLINE,
+					ip: entries[i].ip!,
+					port: entries[i].port!,
+				},
 			});
 		}
 	}

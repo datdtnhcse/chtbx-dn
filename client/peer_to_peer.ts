@@ -34,11 +34,13 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 	console.log("resolved friend connection");
 
 	tcpP2PConnection.on("SEND_MESSAGE", (msg) => {
-		console.log("nhan", msg);
+		wsP2PConnection.send({
+			type: ResultType.SEND_MESSAGE,
+			mess: msg.content,
+		});
 	});
 
 	wsP2PConnection.on("SEND_MESSAGE", (msg) => {
-		console.log(":)) ");
 		tcpP2PConnection.send({
 			type: MessageType.SEND_MESSAGE,
 			content: msg.mess,

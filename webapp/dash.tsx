@@ -16,56 +16,64 @@ export default function Dash() {
 
 	return (
 		<ul>
-			{state.friends.value.map((friend) => (
-				<div>
-					<button
-						onClick={() => {
-							const send = document.getElementById("myForm")!;
-							if (
-								send.style.display === "none" &&
-								friend.state.type == FriendStatus.ONLINE
-							) {
-								send.style.display = "block";
-							} else if (
-								friend.state.type == FriendStatus.OFFLINE
-							) {
-								send.style.display = "none";
-							}
-
-							wsC2SConnection.send({
-								type: ActionType.CONNECT,
-								username: friend.username,
-							});
-						}}
-					>
-						{friend.username}
-					</button>{" "}
-					<b>{friend.state.type}</b>
-					<div></div>
-					<div class="chat-popup" id="myForm" style="display: none">
-						<label>
-							<input
-								type="message"
-								value={message}
-								onInput={(e) =>
-									message.value = e.currentTarget.value}
-							/>
-						</label>
+			{state.friends.value.map((friend) => {
+				return (
+					<div>
 						<button
 							onClick={() => {
-								console.log("ab", friend.username);
-								wsP2PConnections.get(friend.username)!.send({
-									type: ActionType.SEND_MESSAGE,
-									mess: message.value,
+								const send = document.getElementById("myForm")!;
+								if (
+									send.style.display === "none" &&
+									friend.state.type == FriendStatus.ONLINE
+								) {
+									send.style.display = "block";
+								} else if (
+									friend.state.type == FriendStatus.OFFLINE
+								) {
+									send.style.display = "none";
+								}
+
+								wsC2SConnection.send({
+									type: ActionType.CONNECT,
+									username: friend.username,
 								});
-								console.log("cd");
 							}}
 						>
-							Send
-						</button>
+							{friend.username}
+						</button>{" "}
+						<b>{friend.state.type}</b>
+						<div></div>
+						<div
+							class="chat-popup"
+							id="myForm"
+							style="display: none"
+						>
+							<label>
+								<input
+									type="message"
+									value={message}
+									onInput={(e) =>
+										message.value = e.currentTarget.value}
+								/>
+							</label>
+							<button
+								onClick={() => {
+									console.log("ab", friend.username);
+									wsP2PConnections.get(friend.username)!.send(
+										{
+											type: ActionType.SEND_MESSAGE,
+											mess: message.value,
+										},
+									);
+									console.log("cd");
+								}}
+							>
+								Send
+							</button>
+						</div>
 					</div>
-				</div>
-			))}
+				);
+			})}
 		</ul>
 	);
 }
