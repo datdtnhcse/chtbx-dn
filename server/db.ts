@@ -141,9 +141,8 @@ export const getFriendlist = (id: number): Friend[] => {
 	const entries = query.allEntries({ id });
 	const friends: Friend[] = [];
 	for (let i = 0; i < entries.length; i++) {
-		let state;
 		if (entries[i].ip == null || entries[i].port == null) {
-			state = {
+			const state = {
 				type: FriendStatus.OFFLINE,
 			};
 			friends.push({
@@ -151,7 +150,7 @@ export const getFriendlist = (id: number): Friend[] => {
 				state: state,
 			});
 		} else {
-			state = {
+			const state = {
 				type: FriendStatus.ONLINE,
 				ip: entries[i].ip!,
 				port: entries[i].port!,
