@@ -1,11 +1,11 @@
 import { WebSocketResultAction } from "../connection/action_result.ts";
 import { TCPMessageMessage } from "../connection/message_message.ts";
-import { serveTCPServer, serveWSServer } from "../connection/serve.ts";
+import { serveTCP, serveWS } from "../connection/serve.ts";
 import { ResultType } from "../protocol/action_result.ts";
 import { MessageType } from "../protocol/message.ts";
 import { clientState, guiState, tcpP2PServer, wsP2PServer } from "./state.ts";
 
-serveTCPServer(tcpP2PServer, async (conn: Deno.Conn) => {
+serveTCP(tcpP2PServer, async (conn: Deno.Conn) => {
 	const connection = new TCPMessageMessage(conn, "tcp p2p from ??");
 	const helloMsg = await connection.wait("HELLO");
 	const friend = guiState.friends.find((friend) =>
@@ -26,7 +26,7 @@ serveTCPServer(tcpP2PServer, async (conn: Deno.Conn) => {
 	});
 });
 
-serveWSServer(wsP2PServer, async (socket: WebSocket) => {
+serveWS(wsP2PServer, async (socket: WebSocket) => {
 	console.log("handle p2p websocket connection");
 	const wsP2PConnection = new WebSocketResultAction(socket, "ws p2p");
 	const act = await wsP2PConnection.wait("CONNECT");
@@ -34,10 +34,11 @@ serveWSServer(wsP2PServer, async (socket: WebSocket) => {
 	console.log("resolved friend connection");
 
 	tcpP2PConnection.on("SEND_MESSAGE", (msg) => {
-		console.log(msg);
+		console.log("nhan", msg);
 	});
 
 	wsP2PConnection.on("SEND_MESSAGE", (msg) => {
+		console.log(":)) ");
 		tcpP2PConnection.send({
 			type: MessageType.SEND_MESSAGE,
 			content: msg.mess,

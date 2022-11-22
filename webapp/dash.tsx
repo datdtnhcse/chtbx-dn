@@ -1,5 +1,6 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { ActionType } from "../protocol/action_result.ts";
+import { FriendStatus } from "../protocol/request_response.ts";
 import { state, wsC2SConnection, wsP2PConnections } from "./state.ts";
 
 export default function Dash() {
@@ -15,24 +16,30 @@ export default function Dash() {
 
 	return (
 		<ul>
-			{state.friends.value.map((friend) => (
+			{state.friends.value.map((friend) =>
+
+			(
 				<div>
 					<button
 						onClick={() => {
-							const x = document.getElementById("myForm")!;
-							if (x.style.display === "none") {
-								x.style.display = "block";
-							} else {
-								x.style.display = "none";
+							const send = document.getElementById("myForm")!;
+							if (send.style.display === "none" && friend.state.type == FriendStatus.ONLINE) {
+								send.style.display = "block";
+							} else if (friend.state.type == FriendStatus.OFFLINE){
+								send.style.display = "none";
 							}
+
+
+
 							wsC2SConnection.send({
 								type: ActionType.CONNECT,
-								username: "dat",
+								username: friend.username,
 							});
 						}}
 					>
 						{friend.username}
-					</button>
+					</button> <b>{friend.state.type}</b>
+					<div></div>
 					<div class="chat-popup" id="myForm" style="display: none">
 						<label>
 							<input
@@ -44,10 +51,12 @@ export default function Dash() {
 						</label>
 						<button
 							onClick={() => {
+								console.log("ab", friend.username);
 								wsP2PConnections.get(friend.username)!.send({
 									type: ActionType.SEND_MESSAGE,
 									mess: message.value,
 								});
+								console.log("cd");
 							}}
 						>
 							Send
@@ -57,23 +66,4 @@ export default function Dash() {
 			))}
 		</ul>
 	);
-
-	// return (
-	// 	<ul>
-
-	// 		{state.friends.value.map((friend) => (
-
-	// 			<button
-	// 				onClick={() =>
-	// 					clientConnection.act({
-	// 						type: ActionType.CONNECT,
-	// 						username: friend.username,
-	// 					})}
-	// 			>
-	// 				{friend.username}
-	// 			</button>
-
-	// 		))}
-	// 	</ul>
-	// );
 }

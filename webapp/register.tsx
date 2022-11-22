@@ -14,19 +14,23 @@ export default function Register() {
 		loginsignal.value = "OK";
 	};
 	const register = async () => {
+		wsC2SConnection.send({
+			type: ActionType.REGISTER,
+			username: inputUsername.value,
+			password: inputPassword.value,
+		});
 		if (inputComPassword.value != inputPassword.value) {
 			status.value = "Wrong comfirm password!!";
 		} else {
+			console.log("register0");
 			const res = await wsC2SConnection.wait("REGISTER");
+			console.log("register1");
 			if (res.status == RegisterStatus.OK) {
 				status.value = "Đăng ký thành công!!";
 			}
+			console.log("register2");
 			status.value = RegisterStatus[res.status];
-			wsC2SConnection.send({
-				type: ActionType.REGISTER,
-				username: inputUsername.value,
-				password: inputPassword.value,
-			});
+			console.log("register3");
 		}
 	};
 

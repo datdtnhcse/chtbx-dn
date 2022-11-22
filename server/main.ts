@@ -1,5 +1,5 @@
 import { TCPResponseRequest } from "../connection/request_response.ts";
-import { serveTCPServer } from "../connection/serve.ts";
+import { serveTCP } from "../connection/serve.ts";
 import { SERVER_PORT } from "../env.ts";
 import {
 	LoginStatus,
@@ -10,6 +10,7 @@ import {
 	addAccount,
 	findAccountById,
 	findAccountByUsername,
+	getFriendlist,
 	setIP,
 } from "../server/db.ts";
 
@@ -18,7 +19,7 @@ const tcpC2SConnection = Deno.listen({
 	transport: "tcp",
 });
 
-serveTCPServer(tcpC2SConnection, (conn) => {
+serveTCP(tcpC2SConnection, (conn) => {
 	// connection state here
 	let id: number | null = null;
 
@@ -107,11 +108,15 @@ serveTCPServer(tcpC2SConnection, (conn) => {
 		const account = findAccountById.firstEntry({ id });
 		console.log(account);
 		if (!account) throw "account not found in database: " + id;
-		const friends = [{
-			username: account.username,
-			ip: account.ip!,
-			port: account.port!,
-		}];
+
+
+		const friends = getFriendlist(id)
+
+		// [{
+		// 	username: account.username,
+		// 	ip: account.ip!,
+		// 	port: account.port!,
+		// }];
 		clientConnection.send({
 			type: ResponseType.FRIEND_LIST,
 			friends,

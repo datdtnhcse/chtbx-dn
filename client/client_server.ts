@@ -1,12 +1,12 @@
 import { WebSocketResultAction } from "../connection/action_result.ts";
 import { TCPMessageMessage } from "../connection/message_message.ts";
-import { serveWSServer } from "../connection/serve.ts";
+import { serveWS } from "../connection/serve.ts";
 import { ResultType } from "../protocol/action_result.ts";
 import { MessageType } from "../protocol/message.ts";
-import { LoginStatus, RequestType } from "../protocol/request_response.ts";
+import { FriendStatus, LoginStatus, RequestType } from "../protocol/request_response.ts";
 import { clientState, guiState, wsC2SServer } from "./state.ts";
 
-serveWSServer(wsC2SServer, (socket) => {
+serveWS(wsC2SServer, (socket) => {
 	if (clientState.wsC2SConnection != null) {
 		socket.close(undefined, "only one connection at each time");
 		return;
@@ -79,10 +79,12 @@ serveWSServer(wsC2SServer, (socket) => {
 			friend.username === act.username
 		);
 		if (!friend) throw "no friend with that username exist";
+
+		if (friend.state.type == FriendStatus.OFFLINE) throw "Your friend is offline";
 		const tcpP2PConnection = new TCPMessageMessage(
 			await Deno.connect({
-				hostname: friend.ip == "0.0.0.0" ? "127.0.0.1" : friend.ip,
-				port: friend.port,
+				hostname: friend.state.ip == "0.0.0.0" ? "127.0.0.1" : friend.state.ip,
+				port: friend.state.port,
 			}),
 			"tcp p2p to " + friend.username,
 		);
