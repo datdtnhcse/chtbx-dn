@@ -62,6 +62,18 @@ serveWS(wsC2SServer, (socket) => {
 		});
 	});
 
+	clientState.wsC2SConnection.on("ADD_FRIEND", async (action) => {
+		clientState.tcpC2SConnection.send({
+			type: RequestType.ADD_FRIEND,
+			username: action.username,
+		});
+		const res = await clientState.tcpC2SConnection.wait("ADD_FRIEND");
+		clientState.wsC2SConnection!.send({
+			type: ResultType.ADD_FRIEND,
+			status: res.status,
+		});
+	});
+
 	clientState.wsC2SConnection.on("SYNC", async () => {
 		if (guiState.username !== null) {
 			console.log("fetching friends");

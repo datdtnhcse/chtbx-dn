@@ -1,14 +1,27 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
+import { TCPRequestResponse } from "../connection/request_response.ts";
 import { ActionType } from "../protocol/action_result.ts";
 import { FriendStatus } from "../protocol/request_response.ts";
+import AddFriend from "./addFriend.tsx";
 import { state, wsC2SConnection, wsP2PConnections } from "./state.ts";
 
 export default function Dash() {
+	const addFriend = useSignal("");
 	useSignalEffect(() => {
 		wsC2SConnection.send({ type: ActionType.SYNC });
 	});
-
+	if (addFriend.value == "true") {
+		return <AddFriend />;
+	}
 	return (
+		<div>
+			<button
+				onClick={() => {
+					addFriend.value = "true";
+				}}
+
+			>Kết bạn
+			</button>
 		<ul>
 			{state.friends.value.map((friend) => {
 				const status = (friend.state.type ? "Online" : "Offline");
@@ -94,5 +107,6 @@ export default function Dash() {
 				);
 			})}
 		</ul>
+	</div>
 	);
 }

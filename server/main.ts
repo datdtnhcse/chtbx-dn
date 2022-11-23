@@ -4,14 +4,18 @@ import { SERVER_PORT } from "../env.ts";
 import {
 	LoginStatus,
 	RegisterStatus,
+	AddFriendStatus,
 	ResponseType,
 } from "../protocol/request_response.ts";
 import {
 	addAccount,
 	findAccountById,
 	findAccountByUsername,
+	sendFriendRequest,
 	getFriendlist,
 	setIP,
+findRequestExisted,
+sendBackRequest,
 } from "../server/db.ts";
 
 const tcpC2SConnection = Deno.listen({
@@ -102,6 +106,77 @@ serveTCP(tcpC2SConnection, (conn) => {
 		});
 	});
 
+	clientConnection.on("ADD_FRIEND", (request) => {
+		if (id === null) return;
+		console.log(
+			"Make friend with:",
+			request.username,
+		);
+		const account = findAccountByUsername.firstEntry({
+			username: request.username,
+		});
+		if (!account) {
+			console.log("username is not exist");
+			clientConnection.send({
+				type: ResponseType.ADD_FRIEND,
+				status: AddFriendStatus.USERNAME_NOT_EXIST,
+			});
+			return;
+		}
+		if (account.id == id) {
+			console.log("this is your username bro?!")
+			clientConnection.send({
+				type: ResponseType.ADD_FRIEND,
+				status: AddFriendStatus.YOUR_USERNAME,
+			});
+			return;
+		}
+		const friendRequest = findRequestExisted.firstEntry({
+			id,
+			friendId: account.id,
+		});
+		if (friendRequest == null) {
+			sendFriendRequest.firstEntry({
+				id,
+				friendId: account.id,
+			})
+			console.log("send friend request successfully");
+			clientConnection.send({
+				type: ResponseType.ADD_FRIEND,
+				status: AddFriendStatus.OK,
+			})
+			return;
+		}
+		if (friendRequest.state == "sent") {
+			console.log("already sent friend request");
+			clientConnection.send({
+				type: ResponseType.ADD_FRIEND,
+				status: AddFriendStatus.ALREADY_SENT,
+			})
+			return;
+		}
+		if (friendRequest.state == "received") {
+			sendBackRequest.firstEntry({
+				id,
+				friendId: account.id,
+			})
+			console.log("now, you are friends");
+			clientConnection.send({
+				type: ResponseType.ADD_FRIEND,
+				status: AddFriendStatus.OK,
+			})
+			return;
+		}
+		if (friendRequest.state == "friended") {
+			console.log("you were friends, chat now!");
+			clientConnection.send({
+				type: ResponseType.ADD_FRIEND,
+				status: AddFriendStatus.YOU_WERE_FRIENDS,
+			})
+			return;
+		}
+	});
+
 	clientConnection.on("FRIEND_LIST", () => {
 		if (id === null) return;
 		console.log("finding friends of", id);
@@ -111,11 +186,6 @@ serveTCP(tcpC2SConnection, (conn) => {
 
 		const friends = getFriendlist(id);
 
-		// [{
-		// 	username: account.username,
-		// 	ip: account.ip!,
-		// 	port: account.port!,
-		// }];
 		clientConnection.send({
 			type: ResponseType.FRIEND_LIST,
 			friends,

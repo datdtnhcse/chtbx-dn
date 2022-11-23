@@ -1,7 +1,7 @@
 /**
  * Data types for working with webapp-client-server connection
  */
-import { Friend, LoginStatus, RegisterStatus } from "./request_response.ts";
+import { Friend, LoginStatus, RegisterStatus, AddFriendStatus } from "./request_response.ts";
 
 export type Action =
 	| LoginAction
@@ -10,7 +10,7 @@ export type Action =
 	| ConnectAction
 	| HelloAction
 	| MessageAction
-	| MessagesAction;
+	| AddFriendAction;
 export type Result =
 	| LoginResult
 	| RegisterResult
@@ -18,7 +18,7 @@ export type Result =
 	| ConnectResult
 	| HelloResult
 	| MessageResult
-	| MessagesResult;
+	| AddFriendResult;
 
 export enum ActionType {
 	REGISTER = 0,
@@ -27,7 +27,7 @@ export enum ActionType {
 	CONNECT = 3,
 	HELLO = 4,
 	SEND_MESSAGE = 5,
-	SEND_MESSAGES = 6,
+	ADD_FRIEND = 6,
 }
 export enum ResultType {
 	REGISTER = 0,
@@ -36,7 +36,7 @@ export enum ResultType {
 	CONNECT = 3,
 	HELLO = 4,
 	SEND_MESSAGE = 5,
-	SEND_MESSAGES = 6,
+	ADD_FRIEND = 6,
 }
 export type ActionMap = {
 	[K in keyof typeof ActionType]: Action & { //
@@ -109,11 +109,11 @@ export type MessageResult = {
 	type: ResultType.SEND_MESSAGE;
 	content: string;
 };
-export type MessagesAction = {
-	type: ActionType.SEND_MESSAGES;
-	mess: string[];
+export type AddFriendAction = {
+	type: ActionType.ADD_FRIEND;
+	username: string;
 };
-export type MessagesResult = {
-	type: ResultType.SEND_MESSAGES;
-	mess: string[];
+export type AddFriendResult = {
+	type: ResultType.ADD_FRIEND;
+	status: AddFriendStatus;
 };
