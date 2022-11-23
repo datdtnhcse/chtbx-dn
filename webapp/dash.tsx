@@ -26,22 +26,6 @@ export default function Dash() {
 
 				return (
 					<div>
-						<ul>
-							{
-								/* run fail. I want show dialog. Can help ?*/
-								state.dialogs.value.get(friend.username)!.map(
-									(item) => {
-										return (
-											<div>
-												<b>{item}</b>
-											</div>
-										);
-									},
-								)
-							}
-						</ul>
-						<p></p>
-
 						<button
 							onClick={() => {
 								const send = document.getElementById("myForm")!;
@@ -61,6 +45,20 @@ export default function Dash() {
 							id="myForm"
 							style="display: none"
 						>
+							<ul>
+							{
+								/* run fail. I want show dialog. Can help ?*/
+								state.dialogs.value.get(friend.username)!.map(
+									(item) => {
+										return (
+											<div>
+												<b>{item}</b>
+											</div>
+										);
+									},
+								)
+							}
+						</ul>
 							<label>
 								<input
 									type="message"
