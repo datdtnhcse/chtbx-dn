@@ -1,5 +1,6 @@
 import { Decoder } from "../protocol/decoder.ts";
 import { Encoder } from "../protocol/encoder.ts";
+import superjson from "https://esm.sh/superjson@1.11.0";
 
 abstract class Connection<SendMap, ReceiveMap> {
 	label: string;
@@ -123,7 +124,7 @@ export class WebSocketConnection<SendMap, ReceiveMap>
 	async send(data: SendMap[keyof SendMap]) {
 		await this.ready;
 		console.log(this.label, "sent", this.sendKey(data), data);
-		this.socket.send(JSON.stringify(data));
+		this.socket.send(superjson.stringify(data));
 	}
 
 	protected async listen() {
@@ -132,7 +133,7 @@ export class WebSocketConnection<SendMap, ReceiveMap>
 				this.resolve();
 			});
 			this.socket.addEventListener("message", (e) => {
-				this.emit(JSON.parse(e.data));
+				this.emit(superjson.parse(e.data));
 			}, { signal: this.controller.signal });
 
 			// on closing, remove all the listener and return from promise

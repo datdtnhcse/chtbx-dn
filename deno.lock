@@ -227,10 +227,21 @@
     "https://esm.sh/esbuild-plugin-import-map@2.1.0": "843a447621f2cdbfac2e13e484fff0868d2f911b4a1587e1af45e55a004b6e40",
     "https://esm.sh/stable/preact@10.11.3/deno/hooks.js": "535e2fd07e4273ba7db7955102733412c10975a0c1f57e5e18966f612a022b69",
     "https://esm.sh/stable/preact@10.11.3/deno/preact.js": "d17d6b3217ccb0352f68bbd47930aa25d260c1a544f45bcbcf4cd1ded9d630bb",
+    "https://esm.sh/superjson@1.11.0": "d174bc57441d531003ac25e7b9526a1a64621ffbba0df191997f31dde3b05470",
     "https://esm.sh/v99/@preact/signals-core@1.2.2/deno/signals-core.js": "c59e0b57e1fa8719c12cf1f0919ca26f5b524505f39942c36a1b44467bc28916",
     "https://esm.sh/v99/@preact/signals-core@1.2.2/dist/signals-core.d.ts": "e39c59670049b772b2c7748907af01f4fb5d5706b88fa8266d9135925ca5baf7",
     "https://esm.sh/v99/@preact/signals@1.1.2/deno/signals.js": "dac81469ef0d3f1957c35429300e0c66bf68162166cd83ba4cdd8e20f4463077",
     "https://esm.sh/v99/@preact/signals@1.1.2/dist/signals.d.ts": "116c3f66af23a79b17270d9c06df11aa1adedf7170ad9683fdec00261cff7508",
-    "https://esm.sh/v99/esbuild-plugin-import-map@2.1.0/deno/esbuild-plugin-import-map.js": "72d911531c7bc7dbbe698acec08933750f188f013928d24181cea501dd24dfe1"
+    "https://esm.sh/v99/copy-anything@3.0.2/deno/copy-anything.js": "59be8b369b8f7886fb5f0f78e3b626a8505e22edb11cafdbf693d4b8129cf392",
+    "https://esm.sh/v99/esbuild-plugin-import-map@2.1.0/deno/esbuild-plugin-import-map.js": "72d911531c7bc7dbbe698acec08933750f188f013928d24181cea501dd24dfe1",
+    "https://esm.sh/v99/is-what@4.1.7/deno/is-what.js": "efe63a94eb4b38e09706a80c78b024fa35a7848eb08787a754b437f609a11d9e",
+    "https://esm.sh/v99/superjson@1.11.0/deno/superjson.js": "52a7e3204e8022b47b273f90426a94d61091e48ac430838b54ab696d8112b3b9",
+    "https://esm.sh/v99/superjson@1.11.0/dist/class-registry.d.ts": "f7df2e427c4c2736c42aae53556904db6ecc4d22ae5ad6fad6a93a5cd3f0f1a4",
+    "https://esm.sh/v99/superjson@1.11.0/dist/custom-transformer-registry.d.ts": "ddabfb3d8648a1c0928872d20ae6c9ede06d2e79d913e6a807dcfe000a929a50",
+    "https://esm.sh/v99/superjson@1.11.0/dist/index.d.ts": "2d85a5c294b4c176a285bbb1d2c63c20836537edc34a5dd49db82462f975d7c9",
+    "https://esm.sh/v99/superjson@1.11.0/dist/plainer.d.ts": "e6d9a69457d699f6f6ca8367551fffabb721371a73266f9a4bae1c6ea3b8536b",
+    "https://esm.sh/v99/superjson@1.11.0/dist/registry.d.ts": "01545f0274a774e191f06380ddedaec2b2dfbd021ca2e8775f7819959beb2cb4",
+    "https://esm.sh/v99/superjson@1.11.0/dist/transformer.d.ts": "266e84bb5c9613e784cd4e0fba89912104ff867349381158c2844d79c2bccaf0",
+    "https://esm.sh/v99/superjson@1.11.0/dist/types.d.ts": "7ce95529b8ef79ee7dfe9655efcd72afdef30a1b15646d2c4a3fa747dda14f72"
   }
 }

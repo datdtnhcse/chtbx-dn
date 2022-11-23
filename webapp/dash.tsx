@@ -1,7 +1,7 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { ActionType } from "../protocol/action_result.ts";
 import { FriendStatus } from "../protocol/request_response.ts";
-import { dialogs, state, wsC2SConnection, wsP2PConnections } from "./state.ts";
+import { state, wsC2SConnection, wsP2PConnections } from "./state.ts";
 
 export default function Dash() {
 	useSignalEffect(() => {
@@ -13,9 +13,11 @@ export default function Dash() {
 			{state.friends.value.map((friend) => {
 				const status = (friend.state.type ? "Online" : "Offline");
 				const message = useSignal("");
-				let dialog: string[] = [];
 
-				if (friend.state.type === FriendStatus.ONLINE) {
+				if (
+					!wsP2PConnections.get(friend.username) &&
+					friend.state.type === FriendStatus.ONLINE
+				) {
 					wsC2SConnection.send({
 						type: ActionType.CONNECT,
 						username: friend.username,
@@ -27,24 +29,18 @@ export default function Dash() {
 						<ul>
 							{
 								/* run fail. I want show dialog. Can help ?*/
-								dialog.map((item) => {
-									return (
-										<div>
-											<b>{item}</b>
-										</div>
-									);
-								})
+								state.dialogs.value.get(friend.username)!.map(
+									(item) => {
+										return (
+											<div>
+												<b>{item}</b>
+											</div>
+										);
+									},
+								)
 							}
 						</ul>
 						<p></p>
-						<button
-							onClick={() => {
-								dialog = dialogs.get(friend.username)!;
-								console.log(dialog);
-							}}
-						>
-							dialog
-						</button>
 
 						<button
 							onClick={() => {
@@ -81,11 +77,14 @@ export default function Dash() {
 											content: message.value,
 										},
 									);
-									dialog = (dialogs.get(friend.username)
-										? dialogs.get(friend.username)
-										: [])!;
-									dialog.push("me:" + message.value);
-									console.log("dialog", dialog);
+									state.dialogs.value.get(friend.username)!
+										.push("me:" + message.value);
+									console.log(
+										"dialog",
+										state.dialogs.value.get(
+											friend.username,
+										)!,
+									);
 								}}
 							>
 								Send

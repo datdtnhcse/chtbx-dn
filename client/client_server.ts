@@ -70,6 +70,12 @@ serveWS(wsC2SServer, (socket) => {
 			});
 			const res = await clientState.tcpC2SConnection.wait("FRIEND_LIST");
 			guiState.friends = res.friends;
+			for (const friend of guiState.friends) {
+				if (!guiState.dialogs.get(friend.username)) {
+					guiState.dialogs.set(friend.username, []);
+				}
+			}
+
 			console.log(guiState);
 		}
 		clientState.wsC2SConnection!.send({

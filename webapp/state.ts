@@ -28,6 +28,7 @@ type SignalState = {
 export const state: SignalState = {
 	username: signal(null),
 	friends: signal([]),
+	dialogs: signal(new Map()),
 };
 
 // initial sync
@@ -45,7 +46,6 @@ wsC2SConnection.on("SYNC", (res) => {
 });
 
 export const wsP2PConnections: Map<string, WebSocketActionResult> = new Map();
-export const dialogs: Map<string, string[]> = new Map();
 
 wsC2SConnection.on("CONNECT", (res) => {
 	url.port = `${window.SUBWEBSOCKET_PORT}`;
@@ -60,6 +60,6 @@ wsC2SConnection.on("CONNECT", (res) => {
 	});
 	wsP2PConnections.get(res.username)!.on("SEND_MESSAGES", (msg) => {
 		console.log("dialog:", msg.mess);
-		dialogs.set(res.username, msg.mess);
+		state.dialogs.value.set(res.username, msg.mess);
 	});
 });

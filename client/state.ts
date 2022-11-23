@@ -20,6 +20,7 @@ if (tcpP2PServer.addr.transport !== "tcp") throw "unreachable";
 export const guiState: GUIState = {
 	username: null,
 	friends: [],
+	dialogs: new Map(),
 };
 
 type ClientState = {

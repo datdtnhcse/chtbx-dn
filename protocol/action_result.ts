@@ -81,6 +81,7 @@ export type SyncResult = {
 export type GUIState = {
 	username: string | null;
 	friends: Friend[];
+	dialogs: Map<string, string[]>;
 };
 
 export type ConnectAction = {
