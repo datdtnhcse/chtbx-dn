@@ -13,7 +13,7 @@ export default function Dash() {
 			{state.friends.value.map((friend) => {
 				const status = (friend.state.type ? "Online" : "Offline");
 				const message = useSignal("");
-
+				const block = "myForm"+friend.username;
 				if (
 					!wsP2PConnections.get(friend.username) &&
 					friend.state.type === FriendStatus.ONLINE
@@ -25,10 +25,12 @@ export default function Dash() {
 				}
 
 				return (
+
 					<div>
+						<p></p>
 						<button
 							onClick={() => {
-								const send = document.getElementById("myForm")!;
+								const send = document.getElementById(block)!;
 								if (send.style.display === "none") {
 									send.style.display = "block";
 								} else {
@@ -42,7 +44,7 @@ export default function Dash() {
 						<div></div>
 						<div
 							class="chat-popup"
-							id="myForm"
+							id={block}
 							style="display: none"
 						>
 							<ul>

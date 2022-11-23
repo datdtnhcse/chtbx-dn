@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 );
 INSERT INTO accounts(username, password) VALUES ('khang', '123456');
 INSERT INTO accounts(username, password) VALUES ('dat', '123456');
+INSERT INTO accounts(username, password) VALUES ('bkhang', '123456');
 
 CREATE TABLE IF NOT EXISTS friends (
 	id 			INTEGER 												NOT NULL,
@@ -22,7 +23,10 @@ CREATE TABLE IF NOT EXISTS friends (
 );
 
 INSERT INTO friends(id, friendId ,state ) VALUES (1, 2, 'friended');
-INSERT INTO friends(id, friendId ,state) VALUES (2,1, 'friended');
+INSERT INTO friends(id, friendId ,state) VALUES (2, 1, 'friended');
+INSERT INTO friends(id, friendId ,state ) VALUES (2, 3, 'friended');
+INSERT INTO friends(id, friendId ,state) VALUES (3, 2, 'friended');
+
 
 
 
