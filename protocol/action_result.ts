@@ -1,7 +1,12 @@
 /**
  * Data types for working with webapp-client-server connection
  */
-import { Friend, LoginStatus, RegisterStatus, AddFriendStatus } from "./request_response.ts";
+import {
+	AddFriendStatus,
+	Friend,
+	LoginStatus,
+	RegisterStatus,
+} from "./request_response.ts";
 
 export type Action =
 	| LoginAction

@@ -7,11 +7,11 @@ import {
 	SendMessageMessage,
 } from "../protocol/message.ts";
 import {
+	AddFriendRequest,
+	AddFriendResponse,
 	Friend,
 	FriendListRequest,
 	FriendListResponse,
-	AddFriendRequest,
-	AddFriendResponse,
 	FriendStatus,
 	LoginRequest,
 	LoginResponse,
@@ -100,7 +100,7 @@ export class RequestDecoder extends Decoder<Request> {
 
 	async addFriend(): Promise<AddFriendRequest> {
 		const username = await this.lenStr();
-		return { type: RequestType.ADD_FRIEND, username};
+		return { type: RequestType.ADD_FRIEND, username };
 	}
 
 	friendList(): FriendListRequest {
@@ -147,7 +147,7 @@ export class ResponseDecoder extends Decoder<Response> {
 		return {
 			type: ResponseType.ADD_FRIEND,
 			status,
-		}
+		};
 	}
 
 	async friendList(): Promise<FriendListResponse> {

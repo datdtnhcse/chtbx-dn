@@ -58,5 +58,4 @@ wsC2SConnection.on("CONNECT", (res) => {
 	wsP2PConnection.onDisconnect(() => {
 		wsP2PConnections.delete(res.username);
 	});
-
 });

@@ -2,8 +2,16 @@
  * Data types for working with client-server connections.
  */
 
-export type Request = RegisterRequest | LoginRequest | FriendListRequest | AddFriendRequest;
-export type Response = RegisterResponse | LoginResponse | FriendListResponse | AddFriendResponse;
+export type Request =
+	| RegisterRequest
+	| LoginRequest
+	| FriendListRequest
+	| AddFriendRequest;
+export type Response =
+	| RegisterResponse
+	| LoginResponse
+	| FriendListResponse
+	| AddFriendResponse;
 export enum RequestType {
 	REGISTER = 0,
 	LOGIN = 1,

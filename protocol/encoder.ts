@@ -7,12 +7,12 @@ import {
 	SendMessageMessage,
 } from "../protocol/message.ts";
 import {
-	FriendListRequest,
-	FriendListResponse,
-	FriendStatus,
 	AddFriendRequest,
 	AddFriendResponse,
 	AddFriendStatus,
+	FriendListRequest,
+	FriendListResponse,
+	FriendStatus,
 	LoginRequest,
 	LoginResponse,
 	RegisterRequest,

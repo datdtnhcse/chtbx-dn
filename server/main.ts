@@ -2,20 +2,20 @@ import { TCPResponseRequest } from "../connection/request_response.ts";
 import { serveTCP } from "../connection/serve.ts";
 import { SERVER_PORT } from "../env.ts";
 import {
+	AddFriendStatus,
 	LoginStatus,
 	RegisterStatus,
-	AddFriendStatus,
 	ResponseType,
 } from "../protocol/request_response.ts";
 import {
 	addAccount,
 	findAccountById,
 	findAccountByUsername,
-	sendFriendRequest,
+	findRequestExisted,
 	getFriendlist,
+	sendBackRequest,
+	sendFriendRequest,
 	setIP,
-findRequestExisted,
-sendBackRequest,
 } from "../server/db.ts";
 
 const tcpC2SConnection = Deno.listen({
@@ -124,7 +124,7 @@ serveTCP(tcpC2SConnection, (conn) => {
 			return;
 		}
 		if (account.id == id) {
-			console.log("this is your username bro?!")
+			console.log("this is your username bro?!");
 			clientConnection.send({
 				type: ResponseType.ADD_FRIEND,
 				status: AddFriendStatus.YOUR_USERNAME,
@@ -139,12 +139,12 @@ serveTCP(tcpC2SConnection, (conn) => {
 			sendFriendRequest.firstEntry({
 				id,
 				friendId: account.id,
-			})
+			});
 			console.log("send friend request successfully");
 			clientConnection.send({
 				type: ResponseType.ADD_FRIEND,
 				status: AddFriendStatus.OK,
-			})
+			});
 			return;
 		}
 		if (friendRequest.state == "sent") {
@@ -152,19 +152,19 @@ serveTCP(tcpC2SConnection, (conn) => {
 			clientConnection.send({
 				type: ResponseType.ADD_FRIEND,
 				status: AddFriendStatus.ALREADY_SENT,
-			})
+			});
 			return;
 		}
 		if (friendRequest.state == "received") {
 			sendBackRequest.firstEntry({
 				id,
 				friendId: account.id,
-			})
+			});
 			console.log("now, you are friends");
 			clientConnection.send({
 				type: ResponseType.ADD_FRIEND,
 				status: AddFriendStatus.OK,
-			})
+			});
 			return;
 		}
 		if (friendRequest.state == "friended") {
@@ -172,7 +172,7 @@ serveTCP(tcpC2SConnection, (conn) => {
 			clientConnection.send({
 				type: ResponseType.ADD_FRIEND,
 				status: AddFriendStatus.YOU_WERE_FRIENDS,
-			})
+			});
 			return;
 		}
 	});
