@@ -9,14 +9,16 @@ export type Action =
 	| SyncAction
 	| ConnectAction
 	| HelloAction
-	| MessageAction;
+	| MessageAction
+	| MessagesAction;
 export type Result =
 	| LoginResult
 	| RegisterResult
 	| SyncResult
 	| ConnectResult
 	| HelloResult
-	| MessageResult;
+	| MessageResult
+	| MessagesResult;
 
 export enum ActionType {
 	REGISTER = 0,
@@ -25,6 +27,7 @@ export enum ActionType {
 	CONNECT = 3,
 	HELLO = 4,
 	SEND_MESSAGE = 5,
+	SEND_MESSAGES = 6,
 }
 export enum ResultType {
 	REGISTER = 0,
@@ -33,6 +36,7 @@ export enum ResultType {
 	CONNECT = 3,
 	HELLO = 4,
 	SEND_MESSAGE = 5,
+	SEND_MESSAGES = 6,
 }
 export type ActionMap = {
 	[K in keyof typeof ActionType]: Action & { //
@@ -98,9 +102,17 @@ export type HelloResult = {
 };
 export type MessageAction = {
 	type: ActionType.SEND_MESSAGE;
-	mess: string;
+	content: string;
 };
 export type MessageResult = {
 	type: ResultType.SEND_MESSAGE;
-	mess: string;
+	content: string;
+};
+export type MessagesAction = {
+	type: ActionType.SEND_MESSAGES;
+	mess: string[];
+};
+export type MessagesResult = {
+	type: ResultType.SEND_MESSAGES;
+	mess: string[];
 };

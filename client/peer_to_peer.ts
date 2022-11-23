@@ -33,17 +33,19 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 	const tcpP2PConnection = clientState.tcpP2PConnections.get(act.username)!;
 	console.log("resolved friend connection");
 
+	const messages: string[] = [];
 	tcpP2PConnection.on("SEND_MESSAGE", (msg) => {
+		messages.push(act.username + ":" + msg.content);
 		wsP2PConnection.send({
-			type: ResultType.SEND_MESSAGE,
-			mess: msg.content,
+			type: ResultType.SEND_MESSAGES,
+			mess: messages,
 		});
 	});
-
 	wsP2PConnection.on("SEND_MESSAGE", (msg) => {
+		messages.push("me" + msg.content);
 		tcpP2PConnection.send({
 			type: MessageType.SEND_MESSAGE,
-			content: msg.mess,
+			content: msg.content,
 		});
 	});
 });

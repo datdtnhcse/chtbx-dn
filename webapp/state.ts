@@ -45,6 +45,7 @@ wsC2SConnection.on("SYNC", (res) => {
 });
 
 export const wsP2PConnections: Map<string, WebSocketActionResult> = new Map();
+export const dialogs: Map<string, string[]> = new Map();
 
 wsC2SConnection.on("CONNECT", (res) => {
 	url.port = `${window.SUBWEBSOCKET_PORT}`;
@@ -56,5 +57,9 @@ wsC2SConnection.on("CONNECT", (res) => {
 	wsP2PConnection.send({ type: ActionType.CONNECT, username: res.username });
 	wsP2PConnection.onDisconnect(() => {
 		wsP2PConnections.delete(res.username);
+	});
+	wsP2PConnections.get(res.username)!.on("SEND_MESSAGES", (msg) => {
+		console.log("dialog:", msg.mess);
+		dialogs.set(res.username, msg.mess);
 	});
 });

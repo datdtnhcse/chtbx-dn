@@ -223,7 +223,14 @@
     "https://deno.land/x/sqlite@v3.7.0/src/function.ts": "e4c83b8ec64bf88bafad2407376b0c6a3b54e777593c70336fb40d43a79865f2",
     "https://deno.land/x/sqlite@v3.7.0/src/query.ts": "69895232360b4254a8834e3bbea30bc3752cf691dba862f4a393e7a41a2e30eb",
     "https://deno.land/x/sqlite@v3.7.0/src/wasm.ts": "e79d0baa6e42423257fb3c7cc98091c54399254867e0f34a09b5bdef37bd9487",
+    "https://esm.sh/@preact/signals@1.1.2": "34bfcfc7c0857d6bf32bf4ad3bacae33b426a6eb1519d1b33fe46799082697a9",
     "https://esm.sh/esbuild-plugin-import-map@2.1.0": "843a447621f2cdbfac2e13e484fff0868d2f911b4a1587e1af45e55a004b6e40",
+    "https://esm.sh/stable/preact@10.11.3/deno/hooks.js": "535e2fd07e4273ba7db7955102733412c10975a0c1f57e5e18966f612a022b69",
+    "https://esm.sh/stable/preact@10.11.3/deno/preact.js": "d17d6b3217ccb0352f68bbd47930aa25d260c1a544f45bcbcf4cd1ded9d630bb",
+    "https://esm.sh/v99/@preact/signals-core@1.2.2/deno/signals-core.js": "c59e0b57e1fa8719c12cf1f0919ca26f5b524505f39942c36a1b44467bc28916",
+    "https://esm.sh/v99/@preact/signals-core@1.2.2/dist/signals-core.d.ts": "e39c59670049b772b2c7748907af01f4fb5d5706b88fa8266d9135925ca5baf7",
+    "https://esm.sh/v99/@preact/signals@1.1.2/deno/signals.js": "dac81469ef0d3f1957c35429300e0c66bf68162166cd83ba4cdd8e20f4463077",
+    "https://esm.sh/v99/@preact/signals@1.1.2/dist/signals.d.ts": "116c3f66af23a79b17270d9c06df11aa1adedf7170ad9683fdec00261cff7508",
     "https://esm.sh/v99/esbuild-plugin-import-map@2.1.0/deno/esbuild-plugin-import-map.js": "72d911531c7bc7dbbe698acec08933750f188f013928d24181cea501dd24dfe1"
   }
 }
