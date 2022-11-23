@@ -2,12 +2,13 @@
  * Data types for working with client-server connections.
  */
 
-export type Request = RegisterRequest | LoginRequest | FriendListRequest;
-export type Response = RegisterResponse | LoginResponse | FriendListResponse;
+export type Request = RegisterRequest | LoginRequest | FriendListRequest | AddFriendRequest;
+export type Response = RegisterResponse | LoginResponse | FriendListResponse | AddFriendResponse;
 export enum RequestType {
 	REGISTER = 0,
 	LOGIN = 1,
 	FRIEND_LIST = 2,
+	ADD_FRIEND = 3,
 }
 // alias for RequestType, the two are the same
 export import ResponseType = RequestType;
@@ -62,6 +63,27 @@ export type RegisterResponse = {
 export enum RegisterStatus {
 	OK = 0,
 	USERNAME_IS_EXIST = 1,
+}
+
+// ADD FRIEND
+
+export type AddFriendRequest = {
+	type: RequestType.ADD_FRIEND;
+	username: string;
+};
+
+export type AddFriendResponse = {
+	type: ResponseType.ADD_FRIEND;
+	status: AddFriendStatus;
+};
+
+export enum AddFriendStatus {
+	OK = 0,
+	RECEIVED = 1,
+	ALREADY_SENT = 2,
+	USERNAME_NOT_EXIST = 3,
+	YOUR_USERNAME = 4,
+	YOU_WERE_FRIENDS = 5,
 }
 
 // FRIEND LIST
