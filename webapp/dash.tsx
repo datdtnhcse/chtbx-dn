@@ -4,12 +4,6 @@ import { FriendStatus } from "../protocol/request_response.ts";
 import { state, wsC2SConnection, wsP2PConnections } from "./state.ts";
 
 export default function Dash() {
-	const message = useSignal("");
-
-	// friendConnections.on({
-	// 	type: ActionType.SEND_MESSAGE,
-	// 	mess: message.value,
-	// }}
 	useSignalEffect(() => {
 		wsC2SConnection.send({ type: ActionType.SYNC });
 	});
@@ -17,37 +11,54 @@ export default function Dash() {
 	return (
 		<ul>
 			{state.friends.value.map((friend) => {
+				const status = (friend.state.type ? "Online" : "Offline");
+				const message = useSignal("");
+
+				if (
+					!wsP2PConnections.get(friend.username) &&
+					friend.state.type === FriendStatus.ONLINE
+				) {
+					wsC2SConnection.send({
+						type: ActionType.CONNECT,
+						username: friend.username,
+					});
+				}
+
 				return (
 					<div>
 						<button
 							onClick={() => {
 								const send = document.getElementById("myForm")!;
-								if (
-									send.style.display === "none" &&
-									friend.state.type == FriendStatus.ONLINE
-								) {
+								if (send.style.display === "none") {
 									send.style.display = "block";
-								} else if (
-									friend.state.type == FriendStatus.OFFLINE
-								) {
+								} else {
 									send.style.display = "none";
 								}
-
-								wsC2SConnection.send({
-									type: ActionType.CONNECT,
-									username: friend.username,
-								});
 							}}
 						>
 							{friend.username}
 						</button>{" "}
-						<b>{friend.state.type}</b>
+						<b>{status}</b>
 						<div></div>
 						<div
 							class="chat-popup"
 							id="myForm"
 							style="display: none"
 						>
+							<ul>
+							{
+								/* run fail. I want show dialog. Can help ?*/
+								state.dialogs.value.get(friend.username)!.map(
+									(item) => {
+										return (
+											<div>
+												<b>{item}</b>
+											</div>
+										);
+									},
+								)
+							}
+						</ul>
 							<label>
 								<input
 									type="message"
@@ -58,14 +69,20 @@ export default function Dash() {
 							</label>
 							<button
 								onClick={() => {
-									console.log("ab", friend.username);
 									wsP2PConnections.get(friend.username)!.send(
 										{
 											type: ActionType.SEND_MESSAGE,
-											mess: message.value,
+											content: message.value,
 										},
 									);
-									console.log("cd");
+									state.dialogs.value.get(friend.username)!
+										.push("me:" + message.value);
+									console.log(
+										"dialog",
+										state.dialogs.value.get(
+											friend.username,
+										)!,
+									);
 								}}
 							>
 								Send

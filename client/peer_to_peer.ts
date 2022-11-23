@@ -34,16 +34,23 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 	console.log("resolved friend connection");
 
 	tcpP2PConnection.on("SEND_MESSAGE", (msg) => {
-		wsP2PConnection.send({
-			type: ResultType.SEND_MESSAGE,
-			mess: msg.content,
+		guiState.dialogs.get(act.username)!.push(
+			act.username + ":" + msg.content,
+		);
+		clientState.wsC2SConnection!.send({
+			type: ResultType.SYNC,
+			state: guiState,
 		});
 	});
-
 	wsP2PConnection.on("SEND_MESSAGE", (msg) => {
+		guiState.dialogs.get(act.username)!.push("me:" + msg.content);
+		clientState.wsC2SConnection!.send({
+			type: ResultType.SYNC,
+			state: guiState,
+		});
 		tcpP2PConnection.send({
 			type: MessageType.SEND_MESSAGE,
-			content: msg.mess,
+			content: msg.content,
 		});
 	});
 });
