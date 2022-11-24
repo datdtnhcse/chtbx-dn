@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS accounts (
 );
 INSERT INTO accounts(username, password) VALUES ('khang', '123456');
 INSERT INTO accounts(username, password) VALUES ('dat', '123456');
+INSERT INTO accounts(username, password) VALUES ('bkhang', '123456');
+
+
 
 CREATE TABLE IF NOT EXISTS friends (
 	id 			INTEGER 												NOT NULL,
@@ -22,9 +25,7 @@ CREATE TABLE IF NOT EXISTS friends (
 );
 
 INSERT INTO friends(id, friendId ,state ) VALUES (1, 2, 'friended');
-INSERT INTO friends(id, friendId ,state) VALUES (2,1, 'friended');
-
-
+INSERT INTO friends(id, friendId ,state) VALUES (2, 1, 'friended');
 
 `);
 
@@ -40,9 +41,12 @@ export const findAccountByUsername = db.prepareQuery<
 		port: number | null;
 	},
 	{ username: string }
->(
-	"SELECT id, username, password, ip, port FROM accounts WHERE username = :username;",
-);
+>(`
+	SELECT 	id, username, password, ip, port
+	FROM 	accounts
+	WHERE 	username = :username
+;`);
+
 export const findAccountById = db.prepareQuery<
 	never,
 	{
@@ -53,9 +57,12 @@ export const findAccountById = db.prepareQuery<
 		port: number | null;
 	},
 	{ id: number }
->(
-	"SELECT id, username, password, ip, port FROM accounts WHERE id = :id;",
-);
+>(`
+	SELECT 	id, username, password, ip, port
+	FROM 	accounts
+	WHERE 	id = :id
+;`);
+
 export const addAccount = db.prepareQuery<
 	never,
 	never,
@@ -82,7 +89,7 @@ export const setIP = db.prepareQuery<
 
 // friends Query
 
-export const sendRequest = db.prepareQuery<
+export const sendFriendRequest = db.prepareQuery<
 	never,
 	never,
 	{ id: number; friendId: number }
@@ -90,19 +97,24 @@ export const sendRequest = db.prepareQuery<
 	INSERT
 	INTO 	friends(id, friendId, state)
 	VALUES 	(:id, :friendId, 'sent')
-;`);
-
-export const received = db.prepareQuery<
-	never,
-	never,
-	{ id: number; friendId: number }
->(`
+	;
 	INSERT
 	INTO 	friends(id, friendId, state)
 	VALUES 	(:id, :friendId, 'received')
 ;`);
 
-export const acceptRequest = db.prepareQuery<
+export const findRequestExisted = db.prepareQuery<
+	never,
+	{ state: string },
+	{ id: number; friendId: number }
+>(`
+	SELECT 	friends.state
+	FROM 	friends
+	WHERE 	id = :id
+	  AND 	friendId = :friendId
+;`);
+
+export const sendBackRequest = db.prepareQuery<
 	never,
 	never,
 	{ id: number; friendId: number }
@@ -113,16 +125,6 @@ export const acceptRequest = db.prepareQuery<
    	   OR 	(id = :friendId AND friendId = :Id)
 ;`);
 
-export const denyRequest = db.prepareQuery<
-	never,
-	never,
-	{ id: number; friendId: number }
->(`
-	DELETE
-	FROM 	friends
-	WHERE 	(id = :id AND friendId = :friendId)
-	   OR 	(id = :friendId AND friendId = :Id)
-;`);
 export const getFriendlist = (id: number): Friend[] => {
 	const query = db.prepareQuery<
 		never,
@@ -133,10 +135,11 @@ export const getFriendlist = (id: number): Friend[] => {
 		},
 		{ id: number }
 	>(`
-		SELECT accounts.username, accounts.ip , accounts.port
-		FROM accounts JOIN friends
-		ON accounts.id = friends.friendId
-		WHERE friends.id = :id
+		SELECT 	accounts.username, accounts.ip, accounts.port
+		FROM 	accounts
+		JOIN 	friends
+		ON 		accounts.id = friends.friendId
+		WHERE 	friends.id = :id
 	`);
 	const entries = query.allEntries({ id });
 	const friends: Friend[] = [];

@@ -7,6 +7,9 @@ import {
 	SendMessageMessage,
 } from "../protocol/message.ts";
 import {
+	AddFriendRequest,
+	AddFriendResponse,
+	AddFriendStatus,
 	FriendListRequest,
 	FriendListResponse,
 	FriendStatus,
@@ -86,6 +89,9 @@ export class RequestEncoder extends Encoder<Request> {
 		if (req.type === RequestType.FRIEND_LIST) {
 			return this.friendList(req);
 		}
+		if (req.type === RequestType.ADD_FRIEND) {
+			return this.addFriend(req);
+		}
 	}
 	login(req: LoginRequest) {
 		this.byte(RequestType.LOGIN);
@@ -99,6 +105,11 @@ export class RequestEncoder extends Encoder<Request> {
 		this.byte(RequestType.REGISTER);
 		this.lengthStr(req.username);
 		this.lengthStr(req.password);
+		this.writer.flush();
+	}
+	addFriend(req: AddFriendRequest) {
+		this.byte(RequestType.ADD_FRIEND);
+		this.lengthStr(req.username);
 		this.writer.flush();
 	}
 	friendList(_: FriendListRequest) {
@@ -118,6 +129,9 @@ export class ResponseEncoder extends Encoder<Response> {
 		if (res.type === ResponseType.FRIEND_LIST) {
 			return this.friendList(res);
 		}
+		if (res.type === ResponseType.ADD_FRIEND) {
+			return this.addFriend(res);
+		}
 	}
 	login(res: LoginResponse) {
 		this.byte(ResponseType.LOGIN);
@@ -126,6 +140,11 @@ export class ResponseEncoder extends Encoder<Response> {
 	}
 	register(res: RegisterResponse) {
 		this.byte(ResponseType.REGISTER);
+		this.byte(res.status);
+		this.writer.flush();
+	}
+	addFriend(res: AddFriendResponse) {
+		this.byte(ResponseType.ADD_FRIEND);
 		this.byte(res.status);
 		this.writer.flush();
 	}

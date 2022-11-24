@@ -58,8 +58,4 @@ wsC2SConnection.on("CONNECT", (res) => {
 	wsP2PConnection.onDisconnect(() => {
 		wsP2PConnections.delete(res.username);
 	});
-	wsP2PConnections.get(res.username)!.on("SEND_MESSAGES", (msg) => {
-		console.log("dialog:", msg.mess);
-		state.dialogs.value.set(res.username, msg.mess);
-	});
 });

@@ -7,6 +7,8 @@ import {
 	SendMessageMessage,
 } from "../protocol/message.ts";
 import {
+	AddFriendRequest,
+	AddFriendResponse,
 	Friend,
 	FriendListRequest,
 	FriendListResponse,
@@ -75,6 +77,8 @@ export class RequestDecoder extends Decoder<Request> {
 				return this.register();
 			case RequestType.FRIEND_LIST:
 				return this.friendList();
+			case RequestType.ADD_FRIEND:
+				return this.addFriend();
 		}
 
 		throw new Error(`unreachable type: ${type}`);
@@ -94,6 +98,11 @@ export class RequestDecoder extends Decoder<Request> {
 		return { type: RequestType.REGISTER, username, password };
 	}
 
+	async addFriend(): Promise<AddFriendRequest> {
+		const username = await this.lenStr();
+		return { type: RequestType.ADD_FRIEND, username };
+	}
+
 	friendList(): FriendListRequest {
 		return { type: RequestType.FRIEND_LIST };
 	}
@@ -110,6 +119,8 @@ export class ResponseDecoder extends Decoder<Response> {
 				return this.register();
 			case RequestType.FRIEND_LIST:
 				return this.friendList();
+			case RequestType.ADD_FRIEND:
+				return this.addFriend();
 		}
 
 		throw new Error(`unreachable type: ${type}`);
@@ -127,6 +138,14 @@ export class ResponseDecoder extends Decoder<Response> {
 		const status = await this.byte();
 		return {
 			type: ResponseType.REGISTER,
+			status,
+		};
+	}
+
+	async addFriend(): Promise<AddFriendResponse> {
+		const status = await this.byte();
+		return {
+			type: ResponseType.ADD_FRIEND,
 			status,
 		};
 	}
