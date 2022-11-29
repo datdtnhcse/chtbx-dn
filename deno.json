@@ -1,9 +1,8 @@
 {
 	"tasks": {
-		"client": "CLIENT_NO=0 deno run -Ar client/main.ts",
-		"webapp": "CLIENT_NO=0 deno run -Ar webapp/main.ts",
-		"client2": "CLIENT_NO=1 deno run -Ar client/main.ts",
-		"webapp2": "CLIENT_NO=1 deno run -Ar webapp/main.ts",
+		"clienti": "deno run -Ar client/main.ts & deno run -Ar webapp/main.ts",
+		"client": "CLIENT_NO=0 deno task clienti",
+		"client2": "CLIENT_NO=1 deno task clienti",
 		"server": "deno run -Ar server/main.ts"
 	},
 	"importMap": "./import_map.json",

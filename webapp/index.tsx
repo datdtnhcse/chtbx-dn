@@ -1,7 +1,11 @@
 import { render } from "preact";
+import { setup } from "twind";
+import config from "../twind.config.ts";
 import Dash from "./dash.tsx";
 import Login from "./login.tsx";
 import { initializing, state } from "./state.ts";
+
+setup(config);
 
 function App() {
 	if (initializing.value) {
