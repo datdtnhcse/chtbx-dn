@@ -4,7 +4,7 @@ const config: Configuration = {
 	mode: "strict",
 	theme: {
 		fontFamily: {
-			display: ["Big Shoulders Stencil Text", "sans-serif"],
+			display: ["Big Shoulders Stencil Display", "sans-serif"],
 			body: ["Jura", "sans-serif"],
 		},
 	},
