@@ -121,7 +121,7 @@ export const sendBackRequest = db.prepareQuery<
 	UPDATE 	friends
 	SET 	state = 'friended'
 	WHERE 	(id = :id AND friendId = :friendId)
-   	   OR 	(id = :friendId AND friendId = :Id)
+   	   OR 	(id = :friendId AND friendId = :id)
 ;`);
 
 export const getFriendlist = (id: number): Friend[] => {
