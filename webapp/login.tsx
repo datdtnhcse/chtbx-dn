@@ -1,4 +1,4 @@
-import { useSignal } from "@preact/signals";
+import { useSignal, useSignalEffect } from "@preact/signals";
 import { tw } from "twind";
 import { ActionType } from "../protocol/action_result.ts";
 import { LoginStatus, RegisterStatus } from "../protocol/request_response.ts";
@@ -17,6 +17,10 @@ const registerStatuses: Record<RegisterStatus, string> = {
 };
 
 export default function Login() {
+	useSignalEffect(() => {
+		document.title = "Login | CHTBX";
+	});
+
 	const inputUsername = useSignal("");
 	const inputPassword = useSignal("");
 	const status = useSignal("");

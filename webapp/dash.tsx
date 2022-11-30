@@ -6,6 +6,7 @@ import { state, wsC2SConnection, wsP2PConnections } from "./state.ts";
 
 export default function Dash() {
 	useSignalEffect(() => {
+		document.title = "Dashboard | CHTBX";
 		wsC2SConnection.send({ type: ActionType.SYNC });
 	});
 
