@@ -1,6 +1,10 @@
 import { BufWriter } from "std/io/buffer.ts";
 import { writerFromStreamWriter } from "std/streams/conversion.ts";
 import {
+	FileOfferMessage,
+	FileRequestMessage,
+	FileSendMessage,
+	FileStatus,
 	HelloMessage,
 	Message,
 	MessageType,
@@ -42,22 +46,23 @@ export abstract class Encoder<T> {
 		if (i >= Math.pow(2, 8)) {
 			throw Error(`num bigger than 1 bytes: ${i}`);
 		}
-		this.writer.write(
-			new Uint8Array([
-				i,
-			]),
-		);
+		this.writer.write(new Uint8Array([i]));
 	}
 	twoBytes(m: number) {
 		if (m >= Math.pow(2, 16)) {
 			throw Error(`num bigger than 2 bytes: ${m}`);
 		}
-		this.writer.write(
-			new Uint8Array([
-				Math.trunc(m / Math.pow(2, 8)),
-				m % Math.pow(2, 8),
-			]),
-		);
+		const arr = new ArrayBuffer(2);
+		new DataView(arr).setUint16(0, m);
+		this.writer.write(new Uint8Array(arr));
+	}
+	fourBytes(m: number) {
+		if (m >= Math.pow(2, 16)) {
+			throw Error(`num bigger than 2 bytes: ${m}`);
+		}
+		const arr = new ArrayBuffer(4);
+		new DataView(arr).setUint32(0, m);
+		this.writer.write(new Uint8Array(arr));
 	}
 
 	lengthStr(s: string) {
@@ -164,26 +169,42 @@ export class ResponseEncoder extends Encoder<Response> {
 
 export class MessageEncoder extends Encoder<Message> {
 	encode(msg: Message): void {
-		if (msg.type === MessageType.SEND_MESSAGE) {
-			return this.sendMessage(msg);
+		this.byte(msg.type);
+		switch (msg.type) {
+			case MessageType.SEND_MESSAGE:
+				return this.sendMessage(msg);
+			case MessageType.HELLO:
+				return this.hello(msg);
+			case MessageType.FILE_OFFER:
+				return this.fileOffer(msg);
+			case MessageType.FILE_REQUEST:
+				return this.fileRequest(msg);
+			case MessageType.FILE_SEND:
+				return this.fileSend(msg);
+			default:
+				throw "unimplemented";
 		}
-		if (msg.type === MessageType.HELLO) {
-			return this.hello(msg);
-		}
-		throw "unimplemented";
 	}
 	sendMessage(msg: SendMessageMessage) {
-		this.writer.write(
-			new Uint8Array([
-				MessageType.SEND_MESSAGE,
-			]),
-		);
 		this.nullStr(msg.content);
 		this.writer.flush();
 	}
 	hello(msg: HelloMessage) {
-		this.byte(MessageType.HELLO);
 		this.lengthStr(msg.username);
 		this.writer.flush();
+	}
+	fileOffer(msg: FileOfferMessage) {
+		this.nullStr(msg.name);
+		this.fourBytes(msg.size);
+		this.twoBytes(msg.fileId);
+	}
+	fileRequest(msg: FileRequestMessage) {
+		this.twoBytes(msg.fileId);
+	}
+	fileSend(msg: FileSendMessage) {
+		this.byte(msg.status.type);
+		if (msg.status.type === FileStatus.OK) {
+			this.fourBytes(msg.status.size);
+		}
 	}
 }

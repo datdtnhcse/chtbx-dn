@@ -1,6 +1,10 @@
 import { BufReader } from "std/io/buffer.ts";
 import { readerFromStreamReader } from "std/streams/conversion.ts";
 import {
+	FileOfferMessage,
+	FileRequestMessage,
+	FileSendMessage,
+	FileStatus,
 	HelloMessage,
 	Message,
 	MessageType,
@@ -38,8 +42,17 @@ export abstract class Decoder<T> {
 	}
 
 	async twoBytes() {
-		return (await this.byte()) * Math.pow(2, 8) +
-			await this.byte();
+		const arr = new Uint8Array(2);
+		const ok = await this.reader.readFull(arr);
+		if (!ok) throw "EOF";
+		return new DataView(arr).getUint16(0);
+	}
+
+	async fourBytes() {
+		const arr = new Uint8Array(4);
+		const ok = await this.reader.readFull(arr);
+		if (!ok) throw "EOF";
+		return new DataView(arr).getUint32(0);
 	}
 
 	async ip() {
@@ -193,9 +206,15 @@ export class MessageDecoder extends Decoder<Message> {
 				return this.sendMessage();
 			case MessageType.HELLO:
 				return this.hello();
+			case MessageType.FILE_OFFER:
+				return this.fileOffer();
+			case MessageType.FILE_REQUEST:
+				return this.fileRequest();
+			case MessageType.FILE_SEND:
+				return this.fileSend();
+			default:
+				throw new Error(`unreachable type: ${type}`);
 		}
-
-		throw new Error(`unreachable type: ${type}`);
 	}
 	async sendMessage(): Promise<SendMessageMessage> {
 		const content = await this.nullStr();
@@ -204,5 +223,39 @@ export class MessageDecoder extends Decoder<Message> {
 	async hello(): Promise<HelloMessage> {
 		const username = await this.lenStr();
 		return { type: MessageType.HELLO, username };
+	}
+	async fileOffer(): Promise<FileOfferMessage> {
+		const name = await this.nullStr();
+		const size = await this.fourBytes();
+		const fileId = await this.twoBytes();
+		return {
+			type: MessageType.FILE_OFFER,
+			name,
+			size,
+			fileId,
+		};
+	}
+	async fileRequest(): Promise<FileRequestMessage> {
+		const fileId = await this.twoBytes();
+		return { type: MessageType.FILE_REQUEST, fileId };
+	}
+	async fileSend(): Promise<FileSendMessage> {
+		const status = await this.byte();
+		switch (status) {
+			case FileStatus.OK: {
+				const size = await this.fourBytes();
+				return {
+					type: MessageType.FILE_SEND,
+					status: { type: FileStatus.OK, size },
+				};
+			}
+			case FileStatus.FILE_NOT_AVAILABLE:
+				return {
+					type: MessageType.FILE_SEND,
+					status: { type: FileStatus.FILE_NOT_AVAILABLE },
+				};
+			default:
+				throw new Error(`unreachable file status: ${status}`);
+		}
 	}
 }
