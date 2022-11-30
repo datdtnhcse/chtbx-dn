@@ -45,14 +45,14 @@ export abstract class Decoder<T> {
 		const arr = new Uint8Array(2);
 		const ok = await this.reader.readFull(arr);
 		if (!ok) throw "EOF";
-		return new DataView(arr).getUint16(0);
+		return new DataView(arr.buffer).getUint16(0);
 	}
 
 	async fourBytes() {
 		const arr = new Uint8Array(4);
 		const ok = await this.reader.readFull(arr);
 		if (!ok) throw "EOF";
-		return new DataView(arr).getUint32(0);
+		return new DataView(arr.buffer).getUint32(0);
 	}
 
 	async ip() {
