@@ -16,7 +16,8 @@ export type Action =
 	| ConnectAction
 	| HelloAction
 	| MessageAction
-	| AddFriendAction;
+	| AddFriendAction
+	| FileOfferAction;
 export type Result =
 	| LoginResult
 	| RegisterResult
@@ -35,6 +36,7 @@ export enum ActionType {
 	SEND_MESSAGE = 5,
 	ADD_FRIEND = 6,
 	LOGOUT = 7,
+	FILE_OFFER = 8,
 }
 export enum ResultType {
 	REGISTER = 0,
@@ -96,6 +98,7 @@ export type GUIState = {
 		({ type: "content"; author: string; content: string })[]
 	>;
 	connecteds: Set<string>; // usernames
+	offeredFile: { name: string; size: number } | null;
 };
 
 export type ConnectAction = {
@@ -130,4 +133,10 @@ export type AddFriendAction = {
 export type AddFriendResult = {
 	type: ResultType.ADD_FRIEND;
 	status: AddFriendStatus;
+};
+
+export type FileOfferAction = {
+	type: ActionType.FILE_OFFER;
+	name: string;
+	size: number;
 };

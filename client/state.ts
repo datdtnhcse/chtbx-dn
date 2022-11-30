@@ -33,6 +33,7 @@ export const reset = async () => {
 		friends: [],
 		dialogs: new Map(),
 		connecteds: new Set(),
+		offeredFile: null,
 	};
 
 	if (clientState) {
@@ -49,6 +50,7 @@ export const reset = async () => {
 		wsC2SConnection: clientState?.wsC2SConnection ?? null,
 		tcpP2PConnections: new Map(),
 		tcpC2SConnection: await tcpC2SConnection(),
+		fileCounts: 0,
 	};
 	clientState.tcpC2SConnection = await tcpC2SConnection();
 };
@@ -59,6 +61,7 @@ type ClientState = {
 	wsC2SConnection: WebSocketResultAction | null;
 	tcpP2PConnections: Map<string, TCPMessageMessage>;
 	tcpC2SConnection: TCPRequestResponse;
+	fileCounts: number;
 };
 
 reset();

@@ -8,7 +8,7 @@ import {
 	Friend,
 	FriendStatus,
 } from "../protocol/request_response.ts";
-import { state, wsC2SConnection, wsP2PConnections } from "./state.ts";
+import { files, state, wsC2SConnection, wsP2PConnections } from "./state.ts";
 
 export default function Dash() {
 	useSignalEffect(() => {
@@ -162,31 +162,59 @@ function Dialog(props: { username: string }) {
 }
 
 function DialogSend() {
+	const filePath = useSignal("");
+	const file = useSignal<File | null>(null);
 	const inputMessage = useSignal("");
 	const { username } = useContext(DialogContext)!;
 
 	const sendMessage = () => {
-		wsP2PConnections.get(username)!.send({
-			type: ActionType.SEND_MESSAGE,
-			content: inputMessage.value,
-		});
+		if (inputMessage.value != "" || file.value === null) {
+			wsP2PConnections.get(username)!.send({
+				type: ActionType.SEND_MESSAGE,
+				content: inputMessage.value,
+			});
+		}
+		if (file.value !== null) {
+			files.push(file.value);
+			wsP2PConnections.get(username)!.send({
+				type: ActionType.FILE_OFFER,
+				name: file.value.name,
+				size: file.value.size,
+			});
+			filePath.value = "";
+		}
 	};
 
 	return (
-		<div className={tw`flex mt-4`}>
-			<input
-				type="text"
-				onInput={(e) => inputMessage.value = e.currentTarget.value}
-				disabled={!state.connecteds.value.has(username)}
-				className={tw`w-full py-1 px-2 bg-yellow-100 rounded-md disabled:(bg-gray-100 cursor-not-allowed)`}
-			/>
-			<button
-				onClick={sendMessage}
-				disabled={!state.connecteds.value.has(username)}
-				className={tw`ml-2 px-2 py-0.5 text-yellow-600 font-bold rounded-md disabled:(text-gray-500 cursor-not-allowed)`}
-			>
-				send
-			</button>
+		<div className={tw`flex flex-col mt-4`}>
+			<div className={tw`flex`}>
+				<input
+					type="text"
+					onInput={(e) => inputMessage.value = e.currentTarget.value}
+					disabled={!state.connecteds.value.has(username)}
+					className={tw`w-full py-1 px-2 bg-yellow-100 rounded-md disabled:(bg-gray-100 cursor-not-allowed)`}
+				/>
+				<button
+					onClick={sendMessage}
+					disabled={!state.connecteds.value.has(username)}
+					className={tw`ml-2 px-2 py-0.5 text-yellow-600 font-bold rounded-md disabled:(text-gray-500 cursor-not-allowed)`}
+				>
+					send
+				</button>
+			</div>
+			<div>
+				<input
+					type="file"
+					value={filePath.value}
+					onChange={(e) => {
+						filePath.value = e.currentTarget.value;
+						file.value = e.currentTarget.files?.[0] ?? null;
+					}}
+				/>
+			</div>
+			{state.offeredFile.value && (
+				<button>{state.offeredFile.value.name}</button>
+			)}
 		</div>
 	);
 }

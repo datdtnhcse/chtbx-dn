@@ -7,13 +7,15 @@ export type Message =
 	| HelloMessage
 	| FileOfferMessage
 	| FileRequestMessage
-	| FileSendMessage;
+	| FileSendMessage
+	| FileRevokeMessage;
 export enum MessageType {
 	HELLO = 0,
 	SEND_MESSAGE = 1,
 	FILE_OFFER = 2,
 	FILE_REQUEST = 3,
 	FILE_SEND = 4,
+	FILE_REVOKE = 5,
 }
 export type MessageMap = {
 	[K in keyof typeof MessageType]: Message & { //
@@ -31,12 +33,14 @@ export type FileOfferMessage = {
 	type: MessageType.FILE_OFFER;
 	name: string;
 	size: number;
-	fileId: number;
+};
+
+export type FileRevokeMessage = {
+	type: MessageType.FILE_REVOKE;
 };
 
 export type FileRequestMessage = {
 	type: MessageType.FILE_REQUEST;
-	fileId: number;
 };
 
 export type FileSendMessage = {

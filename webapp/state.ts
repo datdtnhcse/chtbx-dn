@@ -30,6 +30,7 @@ export const state: SignalState = {
 	friends: signal([]),
 	dialogs: signal(new Map()),
 	connecteds: signal(new Set()),
+	offeredFile: signal(null),
 };
 
 // initial sync
@@ -51,9 +52,9 @@ wsC2SConnection.on("SYNC", (res) => {
 					username: username,
 				});
 			}
-			setInterval(() => {
-				wsC2SConnection.send({ type: ActionType.SYNC });
-			}, 5000);
+			// setInterval(() => {
+			// 	wsC2SConnection.send({ type: ActionType.SYNC });
+			// }, 5000);
 		}
 		initializing.value = false;
 	});
@@ -93,3 +94,7 @@ effect(() => {
 	}
 	prevConnecteds = new Set(state.connecteds.value);
 });
+
+// files
+
+export const files: File[] = [];

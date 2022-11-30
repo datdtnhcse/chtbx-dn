@@ -58,6 +58,31 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 		});
 	}, { signal: wsP2PConnection.controller.signal });
 
+	wsP2PConnection.on("FILE_OFFER", (msg) => {
+		tcpP2PConnection.send({
+			type: MessageType.FILE_OFFER,
+			name: msg.name,
+			size: msg.size,
+		});
+	});
+
+	tcpP2PConnection.on("FILE_OFFER", (msg) => {
+		guiState.offeredFile = {
+			name: msg.name,
+			size: msg.size,
+		};
+		clientState.wsC2SConnection!.sync(guiState);
+	}, { signal: wsP2PConnection.controller.signal });
+
+	wsP2PConnection.onDisconnect(() => {
+		tcpP2PConnection.send({ type: MessageType.FILE_REVOKE });
+	});
+
+	tcpP2PConnection.on("FILE_REVOKE", () => {
+		guiState.offeredFile = null;
+		clientState.wsC2SConnection!.sync(guiState);
+	}, { signal: wsP2PConnection.controller.signal });
+
 	tcpP2PConnection.onDisconnect(() => {
 		console.log(act.username, "disconnected");
 		clientState.tcpP2PConnections.delete(act.username);

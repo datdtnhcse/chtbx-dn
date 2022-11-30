@@ -3,6 +3,7 @@ import { readerFromStreamReader } from "std/streams/conversion.ts";
 import {
 	FileOfferMessage,
 	FileRequestMessage,
+	FileRevokeMessage,
 	FileSendMessage,
 	FileStatus,
 	HelloMessage,
@@ -212,6 +213,8 @@ export class MessageDecoder extends Decoder<Message> {
 				return this.fileRequest();
 			case MessageType.FILE_SEND:
 				return this.fileSend();
+			case MessageType.FILE_REVOKE:
+				return this.fileRevoke();
 			default:
 				throw new Error(`unreachable type: ${type}`);
 		}
@@ -224,21 +227,25 @@ export class MessageDecoder extends Decoder<Message> {
 		const username = await this.lenStr();
 		return { type: MessageType.HELLO, username };
 	}
+
 	async fileOffer(): Promise<FileOfferMessage> {
 		const name = await this.nullStr();
 		const size = await this.fourBytes();
-		const fileId = await this.twoBytes();
 		return {
 			type: MessageType.FILE_OFFER,
 			name,
 			size,
-			fileId,
 		};
 	}
-	async fileRequest(): Promise<FileRequestMessage> {
-		const fileId = await this.twoBytes();
-		return { type: MessageType.FILE_REQUEST, fileId };
+
+	fileRevoke(): FileRevokeMessage {
+		return { type: MessageType.FILE_REVOKE };
 	}
+
+	fileRequest(): FileRequestMessage {
+		return { type: MessageType.FILE_REQUEST };
+	}
+
 	async fileSend(): Promise<FileSendMessage> {
 		const status = await this.byte();
 		switch (status) {

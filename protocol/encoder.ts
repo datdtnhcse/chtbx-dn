@@ -3,6 +3,7 @@ import { writerFromStreamWriter } from "std/streams/conversion.ts";
 import {
 	FileOfferMessage,
 	FileRequestMessage,
+	FileRevokeMessage,
 	FileSendMessage,
 	FileStatus,
 	HelloMessage,
@@ -181,6 +182,8 @@ export class MessageEncoder extends Encoder<Message> {
 				return this.fileRequest(msg);
 			case MessageType.FILE_SEND:
 				return this.fileSend(msg);
+			case MessageType.FILE_REVOKE:
+				return this.fileRevoke(msg);
 			default:
 				throw "unimplemented";
 		}
@@ -196,15 +199,19 @@ export class MessageEncoder extends Encoder<Message> {
 	fileOffer(msg: FileOfferMessage) {
 		this.nullStr(msg.name);
 		this.fourBytes(msg.size);
-		this.twoBytes(msg.fileId);
+		this.writer.flush();
 	}
-	fileRequest(msg: FileRequestMessage) {
-		this.twoBytes(msg.fileId);
+	fileRequest(_: FileRequestMessage) {
+		this.writer.flush();
+	}
+	fileRevoke(_: FileRevokeMessage) {
+		this.writer.flush();
 	}
 	fileSend(msg: FileSendMessage) {
 		this.byte(msg.status.type);
 		if (msg.status.type === FileStatus.OK) {
 			this.fourBytes(msg.status.size);
 		}
+		this.writer.flush();
 	}
 }
