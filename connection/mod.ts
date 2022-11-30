@@ -7,7 +7,7 @@ abstract class Connection<SendMap, ReceiveMap> {
 	private target: EventTarget;
 	private receiveKey: (data: ReceiveMap[keyof ReceiveMap]) => string;
 	protected sendKey: (data: SendMap[keyof SendMap]) => string;
-	protected controller: AbortController;
+	readonly controller: AbortController;
 
 	constructor(
 		sendKey: (key: SendMap[keyof SendMap]) => string,
@@ -25,9 +25,13 @@ abstract class Connection<SendMap, ReceiveMap> {
 		this.controller.abort();
 	}
 
-	onDisconnect(handler: () => unknown) {
+	onDisconnect(
+		handler: () => unknown,
+		options?: { signal?: AbortSignal },
+	) {
 		this.controller.signal.addEventListener("abort", handler, {
 			once: true,
+			signal: options?.signal,
 		});
 	}
 
@@ -41,14 +45,21 @@ abstract class Connection<SendMap, ReceiveMap> {
 	on<K extends keyof ReceiveMap>(
 		type: K,
 		listener: (req: ReceiveMap[K]) => void,
-		options?: { once: boolean },
+		options?: { once?: boolean; signal?: AbortSignal },
 	) {
 		this.target.addEventListener(type.toString(), (ev) => {
 			if (ev instanceof CustomEvent) {
 				console.log(this.label, "recv", type, ev.detail);
 				listener(ev.detail);
 			}
-		}, { ...options, signal: this.controller.signal });
+		}, {
+			...options,
+			signal: anySignals(
+				[this.controller.signal, options?.signal].filter(
+					Boolean,
+				) as AbortSignal[],
+			),
+		});
 	}
 
 	wait<K extends keyof ReceiveMap>(
@@ -154,4 +165,25 @@ export class WebSocketConnection<SendMap, ReceiveMap>
 	disconnect() {
 		this.socket.close();
 	}
+}
+
+function anySignals(signals: AbortSignal[]) {
+	const controller = new AbortController();
+
+	function onAbort() {
+		controller.abort();
+		for (const signal of signals) {
+			signal.removeEventListener("abort", onAbort);
+		}
+	}
+
+	for (const signal of signals) {
+		if (signal.aborted) {
+			onAbort();
+			break;
+		}
+		signal.addEventListener("abort", onAbort);
+	}
+
+	return controller.signal;
 }
