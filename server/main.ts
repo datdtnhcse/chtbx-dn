@@ -156,7 +156,7 @@ serveTCP(tcpC2SConnection, (conn) => {
 			return;
 		}
 		if (friendRequest.state == "received") {
-			sendBackRequest.firstEntry({
+			sendBackRequest.execute({
 				id,
 				friendId: account.id,
 			});

@@ -15,14 +15,11 @@ serveTCP(tcpP2PServer, async (conn: Deno.Conn) => {
 	connection.label = `tcp p2p from ${friend.username}`;
 
 	clientState.tcpP2PConnections.set(friend.username, connection);
+	guiState.connecteds.add(friend.username);
+
 	clientState.wsC2SConnection!.send({
 		type: ResultType.CONNECT,
 		username: friend.username,
-	});
-
-	// clean up
-	connection.onDisconnect(() => {
-		clientState.tcpP2PConnections.delete(friend.username);
 	});
 });
 
@@ -33,17 +30,12 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 	const tcpP2PConnection = clientState.tcpP2PConnections.get(act.username)!;
 	console.log("resolved friend connection");
 
-	tcpP2PConnection.on("SEND_MESSAGE", (msg) => {
-		guiState.dialogs.get(act.username)!.push(
-			act.username + ":" + msg.content,
-		);
-		clientState.wsC2SConnection!.send({
-			type: ResultType.SYNC,
-			state: guiState,
-		});
-	});
 	wsP2PConnection.on("SEND_MESSAGE", (msg) => {
-		guiState.dialogs.get(act.username)!.push("me:" + msg.content);
+		guiState.dialogs.get(act.username)!.push({
+			type: "content",
+			author: guiState.username!,
+			content: msg.content,
+		});
 		clientState.wsC2SConnection!.send({
 			type: ResultType.SYNC,
 			state: guiState,
@@ -53,4 +45,23 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 			content: msg.content,
 		});
 	});
+
+	tcpP2PConnection.on("SEND_MESSAGE", (msg) => {
+		guiState.dialogs.get(act.username)!.push({
+			type: "content",
+			author: act.username,
+			content: msg.content,
+		});
+		clientState.wsC2SConnection!.send({
+			type: ResultType.SYNC,
+			state: guiState,
+		});
+	}, { signal: wsP2PConnection.controller.signal });
+
+	tcpP2PConnection.onDisconnect(() => {
+		console.log(act.username, "disconnected");
+		clientState.tcpP2PConnections.delete(act.username);
+		guiState.connecteds.delete(act.username);
+		wsP2PConnection.disconnect();
+	}, { signal: wsP2PConnection.controller.signal });
 });

@@ -1,9 +1,11 @@
 {
 	"imports": {
 		"preact": "https://esm.sh/preact@10.11.3",
+		"preact/hooks": "https://esm.sh/preact@10.11.3/hooks",
 		"preact/jsx-runtime": "https://esm.sh/preact@10.11.3/jsx-runtime",
 		"preact/jsx-dev-runtime": "https://esm.sh/preact@10.11.3/jsx-dev-runtime",
 		"@preact/signals": "https://esm.sh/@preact/signals@1.1.2",
-		"std/": "https://deno.land/std@0.163.0/"
+		"std/": "https://deno.land/std@0.163.0/",
+		"twind": "https://esm.sh/twind@0.16.18"
 	}
 }

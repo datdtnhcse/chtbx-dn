@@ -1,6 +1,20 @@
 import { DB } from "https://deno.land/x/sqlite@v3.7.0/mod.ts";
 import { Friend, FriendStatus } from "../protocol/request_response.ts";
 
+type Account = {
+	id: number;
+	username: string;
+	password: string;
+	ip: string | null;
+	port: number | null;
+};
+
+type Friendship = {
+	id: number;
+	friendId: number;
+	state: "sent" | "received" | "friended";
+};
+
 const db = new DB();
 
 db.execute(`
@@ -24,22 +38,16 @@ CREATE TABLE IF NOT EXISTS friends (
 	PRIMARY KEY (id, friendId)
 );
 
-INSERT INTO friends(id, friendId ,state ) VALUES (1, 2, 'friended');
-INSERT INTO friends(id, friendId ,state) VALUES (2, 1, 'friended');
-
-`);
+INSERT INTO friends(id, friendId, state)
+VALUES	(1, 2, 'friended'),
+		(2, 1, 'friended')
+;`);
 
 // accounts Query
 
 export const findAccountByUsername = db.prepareQuery<
 	never,
-	{
-		id: number;
-		username: string;
-		password: string;
-		ip: string | null;
-		port: number | null;
-	},
+	Account,
 	{ username: string }
 >(`
 	SELECT 	id, username, password, ip, port
@@ -49,13 +57,7 @@ export const findAccountByUsername = db.prepareQuery<
 
 export const findAccountById = db.prepareQuery<
 	never,
-	{
-		id: number;
-		username: string;
-		password: string;
-		ip: string | null;
-		port: number | null;
-	},
+	Account,
 	{ id: number }
 >(`
 	SELECT 	id, username, password, ip, port
@@ -96,16 +98,13 @@ export const sendFriendRequest = db.prepareQuery<
 >(`
 	INSERT
 	INTO 	friends(id, friendId, state)
-	VALUES 	(:id, :friendId, 'sent')
-	;
-	INSERT
-	INTO 	friends(id, friendId, state)
-	VALUES 	(:id, :friendId, 'received')
+	VALUES 	(:id, :friendId, 'sent'),
+			(:friendId, :id, 'received')
 ;`);
 
 export const findRequestExisted = db.prepareQuery<
 	never,
-	{ state: string },
+	Pick<Friendship, "state">,
 	{ id: number; friendId: number }
 >(`
 	SELECT 	friends.state
@@ -122,45 +121,51 @@ export const sendBackRequest = db.prepareQuery<
 	UPDATE 	friends
 	SET 	state = 'friended'
 	WHERE 	(id = :id AND friendId = :friendId)
-   	   OR 	(id = :friendId AND friendId = :Id)
+   	   OR 	(id = :friendId AND friendId = :id)
 ;`);
 
 export const getFriendlist = (id: number): Friend[] => {
 	const query = db.prepareQuery<
 		never,
-		{
-			username: string;
-			ip: string | null;
-			port: number | null;
-		},
+		Account & Friendship,
 		{ id: number }
 	>(`
-		SELECT 	accounts.username, accounts.ip, accounts.port
+		SELECT 	accounts.username, accounts.ip, accounts.port, friends.state
 		FROM 	accounts
 		JOIN 	friends
 		ON 		accounts.id = friends.friendId
 		WHERE 	friends.id = :id
 	`);
-	const entries = query.allEntries({ id });
-	const friends: Friend[] = [];
-	for (let i = 0; i < entries.length; i++) {
-		if (entries[i].ip == null || entries[i].port == null) {
-			friends.push({
-				username: entries[i].username,
-				state: {
-					type: FriendStatus.OFFLINE,
-				},
-			});
-		} else {
-			friends.push({
-				username: entries[i].username,
-				state: {
-					type: FriendStatus.ONLINE,
-					ip: entries[i].ip!,
-					port: entries[i].port!,
-				},
-			});
+	return query.allEntries({ id }).map((entry): Friend => {
+		switch (entry.state) {
+			case "sent":
+				return {
+					username: entry.username,
+					status: { type: FriendStatus.SENT },
+				};
+			case "received":
+				return {
+					username: entry.username,
+					status: { type: FriendStatus.RECEIVED },
+				};
+			case "friended":
+				if (entry.ip === null || entry.port === null) {
+					return {
+						username: entry.username,
+						status: { type: FriendStatus.OFFLINE },
+					};
+				} else {
+					return {
+						username: entry.username,
+						status: {
+							type: FriendStatus.ONLINE,
+							ip: entry.ip,
+							port: entry.port,
+						},
+					};
+				}
+			default:
+				throw `state ${entry.state} shouldn't exist in database`;
 		}
-	}
-	return friends;
+	});
 };

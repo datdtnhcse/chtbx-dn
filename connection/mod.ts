@@ -1,13 +1,13 @@
+import superjson from "https://esm.sh/superjson@1.11.0";
 import { Decoder } from "../protocol/decoder.ts";
 import { Encoder } from "../protocol/encoder.ts";
-import superjson from "https://esm.sh/superjson@1.11.0";
 
 abstract class Connection<SendMap, ReceiveMap> {
 	label: string;
 	private target: EventTarget;
 	private receiveKey: (data: ReceiveMap[keyof ReceiveMap]) => string;
 	protected sendKey: (data: SendMap[keyof SendMap]) => string;
-	protected controller: AbortController;
+	readonly controller: AbortController;
 
 	constructor(
 		sendKey: (key: SendMap[keyof SendMap]) => string,
@@ -25,9 +25,13 @@ abstract class Connection<SendMap, ReceiveMap> {
 		this.controller.abort();
 	}
 
-	onDisconnect(handler: () => unknown) {
+	onDisconnect(
+		handler: () => unknown,
+		options?: { signal?: AbortSignal },
+	) {
 		this.controller.signal.addEventListener("abort", handler, {
 			once: true,
+			signal: options?.signal,
 		});
 	}
 
@@ -41,14 +45,21 @@ abstract class Connection<SendMap, ReceiveMap> {
 	on<K extends keyof ReceiveMap>(
 		type: K,
 		listener: (req: ReceiveMap[K]) => void,
-		options?: { once: boolean },
+		options?: { once?: boolean; signal?: AbortSignal },
 	) {
 		this.target.addEventListener(type.toString(), (ev) => {
 			if (ev instanceof CustomEvent) {
 				console.log(this.label, "recv", type, ev.detail);
 				listener(ev.detail);
 			}
-		}, { ...options, signal: this.controller.signal });
+		}, {
+			...options,
+			signal: anySignals(
+				[this.controller.signal, options?.signal].filter(
+					Boolean,
+				) as AbortSignal[],
+			),
+		});
 	}
 
 	wait<K extends keyof ReceiveMap>(
@@ -60,11 +71,13 @@ abstract class Connection<SendMap, ReceiveMap> {
 	}
 
 	abstract send(data: SendMap[keyof SendMap]): void;
+	abstract disconnect(): void;
 	protected abstract listen(): Promise<void>;
 }
 
 export class TCPConnection<SendMap, ReceiveMap>
 	extends Connection<SendMap, ReceiveMap> {
+	private conn: Deno.Conn;
 	private decoder: Decoder<ReceiveMap[keyof ReceiveMap]>;
 	private encoder: Encoder<SendMap[keyof SendMap]>;
 
@@ -77,6 +90,7 @@ export class TCPConnection<SendMap, ReceiveMap>
 		label: string,
 	) {
 		super(sendKey, receiveKey, label);
+		this.conn = clientConn;
 		this.decoder = new Decoder(clientConn);
 		this.encoder = new Encoder(clientConn);
 		this.listen();
@@ -97,6 +111,10 @@ export class TCPConnection<SendMap, ReceiveMap>
 			console.log(e.message);
 			this.abort();
 		}
+	}
+
+	disconnect() {
+		this.conn.close();
 	}
 }
 
@@ -143,4 +161,29 @@ export class WebSocketConnection<SendMap, ReceiveMap>
 			}, { signal: this.controller.signal });
 		});
 	}
+
+	disconnect() {
+		this.socket.close();
+	}
+}
+
+function anySignals(signals: AbortSignal[]) {
+	const controller = new AbortController();
+
+	function onAbort() {
+		controller.abort();
+		for (const signal of signals) {
+			signal.removeEventListener("abort", onAbort);
+		}
+	}
+
+	for (const signal of signals) {
+		if (signal.aborted) {
+			onAbort();
+			break;
+		}
+		signal.addEventListener("abort", onAbort);
+	}
+
+	return controller.signal;
 }
