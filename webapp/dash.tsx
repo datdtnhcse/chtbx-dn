@@ -173,6 +173,7 @@ function DialogSend() {
 				type: ActionType.SEND_MESSAGE,
 				content: inputMessage.value,
 			});
+			inputMessage.value = "";
 		}
 		if (file.value !== null) {
 			files.push(file.value);
@@ -187,21 +188,27 @@ function DialogSend() {
 
 	return (
 		<div className={tw`flex flex-col mt-4`}>
-			<div className={tw`flex`}>
+			<form
+				className={tw`flex`}
+				onSubmit={(e) => {
+					e.preventDefault();
+					sendMessage();
+				}}
+			>
 				<input
 					type="text"
+					value={inputMessage.value}
 					onInput={(e) => inputMessage.value = e.currentTarget.value}
 					disabled={!state.connecteds.value.has(username)}
 					className={tw`w-full py-1 px-2 bg-yellow-100 rounded-md disabled:(bg-gray-100 cursor-not-allowed)`}
 				/>
 				<button
-					onClick={sendMessage}
 					disabled={!state.connecteds.value.has(username)}
 					className={tw`ml-2 px-2 py-0.5 text-yellow-600 font-bold rounded-md disabled:(text-gray-500 cursor-not-allowed)`}
 				>
 					send
 				</button>
-			</div>
+			</form>
 			<div>
 				<input
 					type="file"
