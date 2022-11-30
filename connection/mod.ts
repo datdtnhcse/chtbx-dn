@@ -1,6 +1,6 @@
+import superjson from "https://esm.sh/superjson@1.11.0";
 import { Decoder } from "../protocol/decoder.ts";
 import { Encoder } from "../protocol/encoder.ts";
-import superjson from "https://esm.sh/superjson@1.11.0";
 
 abstract class Connection<SendMap, ReceiveMap> {
 	label: string;
@@ -60,11 +60,13 @@ abstract class Connection<SendMap, ReceiveMap> {
 	}
 
 	abstract send(data: SendMap[keyof SendMap]): void;
+	abstract disconnect(): void;
 	protected abstract listen(): Promise<void>;
 }
 
 export class TCPConnection<SendMap, ReceiveMap>
 	extends Connection<SendMap, ReceiveMap> {
+	private conn: Deno.Conn;
 	private decoder: Decoder<ReceiveMap[keyof ReceiveMap]>;
 	private encoder: Encoder<SendMap[keyof SendMap]>;
 
@@ -77,6 +79,7 @@ export class TCPConnection<SendMap, ReceiveMap>
 		label: string,
 	) {
 		super(sendKey, receiveKey, label);
+		this.conn = clientConn;
 		this.decoder = new Decoder(clientConn);
 		this.encoder = new Encoder(clientConn);
 		this.listen();
@@ -97,6 +100,10 @@ export class TCPConnection<SendMap, ReceiveMap>
 			console.log(e.message);
 			this.abort();
 		}
+	}
+
+	disconnect() {
+		this.conn.close();
 	}
 }
 
@@ -142,5 +149,9 @@ export class WebSocketConnection<SendMap, ReceiveMap>
 				resolve();
 			}, { signal: this.controller.signal });
 		});
+	}
+
+	disconnect() {
+		this.socket.close();
 	}
 }

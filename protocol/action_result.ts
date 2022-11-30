@@ -10,6 +10,7 @@ import {
 
 export type Action =
 	| LoginAction
+	| LogoutAction
 	| RegisterAction
 	| SyncAction
 	| ConnectAction
@@ -33,6 +34,7 @@ export enum ActionType {
 	HELLO = 4,
 	SEND_MESSAGE = 5,
 	ADD_FRIEND = 6,
+	LOGOUT = 7,
 }
 export enum ResultType {
 	REGISTER = 0,
@@ -56,6 +58,9 @@ export type ResultMap = {
 export const actionKey = (act: Action) => ActionType[act.type];
 export const resultKey = (res: Result) => ResultType[res.type];
 
+export type LogoutAction = {
+	type: ActionType.LOGOUT;
+};
 export type LoginAction = {
 	type: ActionType.LOGIN;
 	username: string;

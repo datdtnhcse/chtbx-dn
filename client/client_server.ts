@@ -8,7 +8,7 @@ import {
 	LoginStatus,
 	RequestType,
 } from "../protocol/request_response.ts";
-import { clientState, guiState, wsC2SServer } from "./state.ts";
+import { clientState, guiState, reset, wsC2SServer } from "./state.ts";
 
 serveWS(wsC2SServer, (socket) => {
 	if (clientState.wsC2SConnection != null) {
@@ -46,6 +46,14 @@ serveWS(wsC2SServer, (socket) => {
 		clientState.wsC2SConnection!.send({
 			type: ResultType.LOGIN,
 			status: res.status,
+		});
+	});
+
+	clientState.wsC2SConnection.on("LOGOUT", () => {
+		reset();
+		clientState.wsC2SConnection!.send({
+			type: ResultType.SYNC,
+			state: guiState,
 		});
 	});
 
@@ -87,7 +95,6 @@ serveWS(wsC2SServer, (socket) => {
 					guiState.dialogs.set(friend.username, []);
 				}
 			}
-
 			console.log(guiState);
 		}
 		clientState.wsC2SConnection!.send({

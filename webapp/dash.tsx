@@ -11,7 +11,7 @@ export default function Dash() {
 	});
 
 	const logout = () => {
-		console.log("TODO");
+		wsC2SConnection.send({ type: ActionType.LOGOUT });
 	};
 
 	const sync = () => {
