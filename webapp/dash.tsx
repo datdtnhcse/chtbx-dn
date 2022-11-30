@@ -24,7 +24,7 @@ export default function Dash() {
 				}}
 			>
 				<h1 className={tw`font-display text-6xl font-black`}>CHTBX</h1>
-				<div className={tw`mt-3 flex justify-between`}>
+				<div className={tw`mt-3 flex justify-between border-b pb-4`}>
 					<p>
 						hello,{" "}
 						<span className={tw`font-bold`}>{state.username}</span>
@@ -130,7 +130,7 @@ function Dialog(props: { username: string }) {
 
 	return (
 		<div
-			className={tw`w-64 h-full bg-white p-5 bg-opacity-80`}
+			className={tw`w-64 h-full bg-white p-5 bg-opacity-80 rounded-md`}
 			style={{
 				backdropFilter: "blur(5px)",
 			}}

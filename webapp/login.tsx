@@ -46,20 +46,24 @@ export default function Login() {
 
 	return (
 		<>
-			<h1 className={tw`font-display text-5xl text-gray-900`}>CHTBX</h1>
 			<div
-				className={tw`w-full max-w-xs flex flex-col items-start font-body space-y-3 p-5 shadow-md rounded-md`}
+				className={tw`w-full max-w-xs flex flex-col items-start font-body space-y-3 p-5 bg-white bg-opacity-70 rounded-md`}
 				style={{
-					backdropFilter: "blur(10px)",
+					backdropFilter: "blur(5px)",
 				}}
 			>
+				<h1
+					className={tw`w-full font-display text-5xl text-gray-900 text-center`}
+				>
+					CHTBX
+				</h1>
 				<label className={tw`w-full`}>
 					<p className={tw`font-bold`}>
 						username
 					</p>
 					<input
 						type="text"
-						className={tw`px-2 py-1 w-full bg-white rounded-md`}
+						className={tw`px-2 py-1 w-full bg-yellow-100 rounded-md`}
 						onInput={(e) =>
 							inputUsername.value = e.currentTarget.value}
 					/>
@@ -70,7 +74,7 @@ export default function Login() {
 					</p>
 					<input
 						type="password"
-						className={tw`px-2 py-1 w-full bg-white rounded-md`}
+						className={tw`px-2 py-1 w-full bg-yellow-100 rounded-md`}
 						onInput={(e) =>
 							inputPassword.value = e.currentTarget.value}
 					/>
