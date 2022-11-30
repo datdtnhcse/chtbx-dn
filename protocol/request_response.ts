@@ -87,11 +87,10 @@ export type AddFriendResponse = {
 
 export enum AddFriendStatus {
 	OK = 0,
-	RECEIVED = 1,
-	ALREADY_SENT = 2,
-	USERNAME_NOT_EXIST = 3,
-	YOUR_USERNAME = 4,
-	YOU_WERE_FRIENDS = 5,
+	ALREADY_SENT = 1,
+	USERNAME_NOT_EXIST = 2,
+	YOUR_USERNAME = 3,
+	YOU_WERE_FRIENDS = 4,
 }
 
 // FRIEND LIST
@@ -105,7 +104,9 @@ export type FriendListResponse = {
 };
 export type Friend = {
 	username: string;
-	state:
+	status:
+		| { type: FriendStatus.SENT }
+		| { type: FriendStatus.RECEIVED }
 		| { type: FriendStatus.OFFLINE }
 		| { type: FriendStatus.ONLINE; ip: string; port: number };
 };
@@ -113,4 +114,6 @@ export type Friend = {
 export enum FriendStatus {
 	OFFLINE = 0,
 	ONLINE = 1,
+	SENT = 2,
+	RECEIVED = 3,
 }

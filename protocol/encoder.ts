@@ -9,7 +9,6 @@ import {
 import {
 	AddFriendRequest,
 	AddFriendResponse,
-	AddFriendStatus,
 	FriendListRequest,
 	FriendListResponse,
 	FriendStatus,
@@ -153,12 +152,10 @@ export class ResponseEncoder extends Encoder<Response> {
 		this.twoBytes(res.friends.length);
 		for (const friend of res.friends) {
 			this.lengthStr(friend.username);
-			if (friend.state.type == FriendStatus.OFFLINE) {
-				this.byte(FriendStatus.OFFLINE);
-			} else {
-				this.byte(FriendStatus.ONLINE);
-				this.ip(friend.state.ip);
-				this.twoBytes(friend.state.port);
+			this.byte(friend.status.type);
+			if (friend.status.type == FriendStatus.ONLINE) {
+				this.ip(friend.status.ip);
+				this.twoBytes(friend.status.port);
 			}
 		}
 		this.writer.flush();

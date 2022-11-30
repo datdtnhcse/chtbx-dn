@@ -102,15 +102,15 @@ serveWS(wsC2SServer, (socket) => {
 		);
 		if (!friend) throw "no friend with that username exist";
 
-		if (friend.state.type == FriendStatus.OFFLINE) {
-			throw "Your friend is offline";
+		if (friend.status.type != FriendStatus.ONLINE) {
+			throw "Your friend is not online";
 		}
 		const tcpP2PConnection = new TCPMessageMessage(
 			await Deno.connect({
-				hostname: friend.state.ip == "0.0.0.0"
+				hostname: friend.status.ip == "0.0.0.0"
 					? "127.0.0.1"
-					: friend.state.ip,
-				port: friend.state.port,
+					: friend.status.ip,
+				port: friend.status.port,
 			}),
 			"tcp p2p to " + friend.username,
 		);

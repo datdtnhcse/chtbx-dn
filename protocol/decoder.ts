@@ -155,28 +155,30 @@ export class ResponseDecoder extends Decoder<Response> {
 		const friends: Friend[] = new Array(len);
 		for (let i = 0; i < len; i++) {
 			const username = await this.lenStr();
-			let ip = null;
-			let port = null;
 			const type = await this.byte();
-			if (type == FriendStatus.ONLINE) {
-				ip = await this.ip();
-				port = await this.twoBytes();
-				friends[i] = {
-					username,
-					state: {
-						type,
-						ip,
-						port,
-					},
-				};
-				continue;
+			switch (type) {
+				case FriendStatus.ONLINE: {
+					const ip = await this.ip();
+					const port = await this.twoBytes();
+					friends[i] = {
+						username,
+						status: {
+							type,
+							ip,
+							port,
+						},
+					};
+					continue;
+				}
+				default:
+					friends[i] = {
+						username,
+						status: {
+							type,
+						},
+					};
+					continue;
 			}
-			friends[i] = {
-				username,
-				state: {
-					type,
-				},
-			};
 		}
 		return { type: ResponseType.FRIEND_LIST, friends };
 	}

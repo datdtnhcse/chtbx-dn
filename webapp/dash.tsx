@@ -13,6 +13,10 @@ export default function Dash() {
 		console.log("TODO");
 	};
 
+	const sync = () => {
+		wsC2SConnection.send({ type: ActionType.SYNC });
+	};
+
 	return (
 		<div
 			className={tw`h-2/3 w-full flex items-center justify-center space-x-10`}
@@ -41,6 +45,7 @@ export default function Dash() {
 						your friends
 					</h2>
 					<button
+						onClick={sync}
 						className={tw`ml-2 px-2 text-yellow-600 font-bold rounded-md`}
 					>
 						sync
@@ -64,7 +69,6 @@ function AddFriend() {
 	const addFriendStatuses: Record<AddFriendStatus, string> = {
 		[AddFriendStatus.OK]: "friend request sent",
 		[AddFriendStatus.ALREADY_SENT]: "friend request had already sent",
-		[AddFriendStatus.RECEIVED]: "received??",
 		[AddFriendStatus.USERNAME_NOT_EXIST]: "username does not exist",
 		[AddFriendStatus.YOUR_USERNAME]: "can't add friend to yourself",
 		[AddFriendStatus.YOU_WERE_FRIENDS]: "already friend",
@@ -106,7 +110,8 @@ function Dialog(props: { username: string }) {
 	useSignalEffect(() => {
 		if (
 			!wsP2PConnections.get(props.username) &&
-			state.friends.value.find((f) => f.username == props.username)?.state
+			state.friends.value.find((f) => f.username == props.username)
+					?.status
 					.type === FriendStatus.ONLINE
 		) {
 			wsC2SConnection.send({
