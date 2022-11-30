@@ -91,7 +91,10 @@ export type SyncResult = {
 export type GUIState = {
 	username: string | null;
 	friends: Friend[];
-	dialogs: Map<string, string[]>;
+	dialogs: Map<
+		string,
+		({ type: "content"; author: string; content: string })[]
+	>;
 	connecteds: Set<string>; // usernames
 };
 

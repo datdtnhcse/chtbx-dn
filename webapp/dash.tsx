@@ -123,17 +123,38 @@ function Dialog(props: { username: string }) {
 	return (
 		<DialogContext.Provider value={{ username: props.username }}>
 			<div
-				className={tw`w-64 h-full bg-white p-5 bg-opacity-80 rounded-md`}
+				className={tw`w-64 h-full flex flex-col bg-white p-5 bg-opacity-80 rounded-md`}
 				style={{
 					backdropFilter: "blur(5px)",
 				}}
 			>
-				<h3 className={tw`font-display text-3xl`}>
+				<h3 className={tw`font-display text-3xl border-b pb-3`}>
 					{props.username}
 				</h3>
-				{state.dialogs.value.get(props.username)!.map((
-					message,
-				) => <p>{message}</p>)}
+				<ul
+					className={tw`mt-3 space-y-1 flex-grow overflow-y-auto`}
+				>
+					{state.dialogs.value.get(props.username)!.map((
+						message,
+					) => {
+						const isSelf = state.username.value === message.author;
+
+						return (
+							<li>
+								<p>
+									<span
+										className={tw`font-bold ${
+											isSelf ? "text-yellow-500" : ""
+										}`}
+									>
+										⟨{isSelf ? "you" : message.author}⟩
+									</span>{" "}
+									{message.content}
+								</p>
+							</li>
+						);
+					})}
+				</ul>
 				<DialogSend />
 			</div>
 		</DialogContext.Provider>
