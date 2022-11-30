@@ -87,12 +87,25 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 		});
 	});
 
+	let controller = new AbortController();
 	wsP2PConnection.on("FILE_OFFER", (msg) => {
 		tcpP2PConnection!.send({
 			type: MessageType.FILE_OFFER,
 			name: msg.name,
 			size: msg.size,
 		});
+		controller.abort();
+		controller = new AbortController();
+		tcpP2PConnection!.on("FILE_REQUEST", () => {
+			// requestee must be present not to revoke the file
+			wsP2PConnection.send({
+				type: ResultType.FILE_REQUEST,
+			});
+		}, { signal: controller.signal });
+	});
+
+	wsP2PConnection.on("FILE_REQUEST", () => {
+		tcpP2PConnection!.send({ type: MessageType.FILE_REQUEST });
 	});
 
 	wsP2PConnection.onDisconnect(() => {

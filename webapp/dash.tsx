@@ -166,6 +166,7 @@ function DialogSend() {
 	const file = useSignal<File | null>(null);
 	const inputMessage = useSignal("");
 	const { username } = useContext(DialogContext)!;
+	const controller = useSignal(new AbortController());
 
 	const sendMessage = () => {
 		if (inputMessage.value != "" || file.value === null) {
@@ -182,8 +183,17 @@ function DialogSend() {
 				name: file.value.name,
 				size: file.value.size,
 			});
+			controller.value.abort();
+			controller.value = new AbortController();
+			wsP2PConnections.get(username)!.on("FILE_REQUEST", () => {
+				console.log("callback");
+			}, { signal: controller.value.signal });
 			filePath.value = "";
 		}
+	};
+
+	const download = () => {
+		wsP2PConnections.get(username)!.send({ type: ActionType.FILE_REQUEST });
 	};
 
 	return (
@@ -220,7 +230,9 @@ function DialogSend() {
 				/>
 			</div>
 			{state.offeredFile.value && (
-				<button>{state.offeredFile.value.name}</button>
+				<button onClick={download}>
+					{state.offeredFile.value.name}
+				</button>
 			)}
 		</div>
 	);
