@@ -92,6 +92,7 @@ export type GUIState = {
 	username: string | null;
 	friends: Friend[];
 	dialogs: Map<string, string[]>;
+	connecteds: Set<string>; // usernames
 };
 
 export type ConnectAction = {

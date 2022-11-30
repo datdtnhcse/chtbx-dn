@@ -1,7 +1,13 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
+import { createContext } from "preact";
+import { useContext } from "preact/hooks";
 import { tw } from "twind";
 import { ActionType } from "../protocol/action_result.ts";
-import { AddFriendStatus, FriendStatus } from "../protocol/request_response.ts";
+import {
+	AddFriendStatus,
+	Friend,
+	FriendStatus,
+} from "../protocol/request_response.ts";
 import { state, wsC2SConnection, wsP2PConnections } from "./state.ts";
 
 export default function Dash() {
@@ -36,7 +42,7 @@ export default function Dash() {
 					</p>
 					<button
 						onClick={logout}
-						className={tw`text-gray-500 hover:(text-underline)`}
+						className={tw`text-gray-300 font-bold hover:(text-underline)`}
 					>
 						logout
 					</button>
@@ -52,16 +58,19 @@ export default function Dash() {
 						sync
 					</button>
 				</div>
-				<ul>
-					{state.friends.value.map((friend) => {
-						return <li>{friend.username}</li>;
-					})}
-				</ul>
+				<ol className={tw`mt-4 list-sqaure pl-4`}>
+					{state.friends.value.map((friend) => (
+						<li className={tw`pl-1`}>
+							<FriendItem friend={friend} />
+						</li>
+					))}
+				</ol>
 				<AddFriend />
 			</div>
-			{[...state.dialogs.value.keys()].map((username) => {
-				return <Dialog username={username}></Dialog>;
-			})}
+			{[...state.dialogs.value.entries()].map(([username, dialog]) =>
+				(state.connecteds.value.has(username) || dialog.length != 0) &&
+				<Dialog username={username}></Dialog>
+			)}
 		</div>
 	);
 }
@@ -85,6 +94,7 @@ function AddFriend() {
 		});
 		const res = await wsC2SConnection.wait("ADD_FRIEND");
 		status.value = addFriendStatuses[res.status];
+		wsC2SConnection.send({ type: ActionType.SYNC });
 	};
 
 	return (
@@ -107,57 +117,123 @@ function AddFriend() {
 	);
 }
 
-function Dialog(props: { username: string }) {
-	useSignalEffect(() => {
-		if (
-			!wsP2PConnections.get(props.username) &&
-			state.friends.value.find((f) => f.username == props.username)
-					?.status
-					.type === FriendStatus.ONLINE
-		) {
-			wsC2SConnection.send({
-				type: ActionType.CONNECT,
-				username: props.username,
-			});
-		}
-	});
+const DialogContext = createContext<{ username: string } | null>(null);
 
+function Dialog(props: { username: string }) {
+	return (
+		<DialogContext.Provider value={{ username: props.username }}>
+			<div
+				className={tw`w-64 h-full bg-white p-5 bg-opacity-80 rounded-md`}
+				style={{
+					backdropFilter: "blur(5px)",
+				}}
+			>
+				<h3 className={tw`font-display text-3xl`}>
+					{props.username}
+				</h3>
+				{state.dialogs.value.get(props.username)!.map((
+					message,
+				) => <p>{message}</p>)}
+				<DialogSend />
+			</div>
+		</DialogContext.Provider>
+	);
+}
+
+function DialogSend() {
 	const inputMessage = useSignal("");
+	const { username } = useContext(DialogContext)!;
 
 	const sendMessage = () => {
-		wsP2PConnections.get(props.username)!
-			.send(
-				{
-					type: ActionType.SEND_MESSAGE,
-					content: inputMessage.value,
-				},
-			);
+		wsP2PConnections.get(username)!.send({
+			type: ActionType.SEND_MESSAGE,
+			content: inputMessage.value,
+		});
 	};
 
 	return (
-		<div
-			className={tw`w-64 h-full bg-white p-5 bg-opacity-80 rounded-md`}
-			style={{
-				backdropFilter: "blur(5px)",
-			}}
-		>
-			<h3 className={tw`font-display text-3xl`}>{props.username}</h3>
-			{state.dialogs.value.get(props.username)!.map((message) => (
-				<p>{message}</p>
-			))}
-			<div className={tw`flex mt-4`}>
-				<input
-					type="text"
-					onInput={(e) => inputMessage.value = e.currentTarget.value}
-					className={tw`w-full py-1 px-2 bg-yellow-100 rounded-md`}
-				/>
-				<button
-					onClick={sendMessage}
-					className={tw`ml-2 px-2 py-0.5 text-yellow-600 font-bold rounded-md`}
-				>
-					send
-				</button>
-			</div>
+		<div className={tw`flex mt-4`}>
+			<input
+				type="text"
+				onInput={(e) => inputMessage.value = e.currentTarget.value}
+				disabled={!state.connecteds.value.has(username)}
+				className={tw`w-full py-1 px-2 bg-yellow-100 rounded-md disabled:(bg-gray-100 cursor-not-allowed)`}
+			/>
+			<button
+				onClick={sendMessage}
+				disabled={!state.connecteds.value.has(username)}
+				className={tw`ml-2 px-2 py-0.5 text-yellow-600 font-bold rounded-md disabled:(text-gray-500 cursor-not-allowed)`}
+			>
+				send
+			</button>
 		</div>
 	);
+}
+
+function FriendItem(props: { friend: Friend }) {
+	const accept = () => {
+		wsC2SConnection.send({
+			type: ActionType.ADD_FRIEND,
+			username: props.friend.username,
+		});
+		wsC2SConnection.send({ type: ActionType.SYNC });
+	};
+
+	const connect = () => {
+		wsC2SConnection.send({
+			type: ActionType.CONNECT,
+			username: props.friend.username,
+		});
+	};
+
+	switch (props.friend.status.type) {
+		case FriendStatus.ONLINE:
+			return (
+				<div className={tw`w-full inline-flex justify-between`}>
+					<span>
+						{props.friend.username}
+					</span>
+					{!state.connecteds.value.has(props.friend.username)
+						? (
+							<button
+								onClick={connect}
+								className={tw`px-2 py-0.5 bg-yellow-500 text-white font-bold rounded-md`}
+							>
+								connect
+							</button>
+						)
+						: (
+							<span className={tw`text-green-500 font-bold`}>
+								connected
+							</span>
+						)}
+				</div>
+			);
+		case FriendStatus.RECEIVED:
+			return (
+				<div className={tw`w-full inline-flex justify-between`}>
+					<span>
+						{props.friend.username}
+					</span>
+					<button
+						onClick={accept}
+						className={tw`px-2 py-0.5 bg-yellow-500 text-white font-bold rounded-md`}
+					>
+						accept
+					</button>
+				</div>
+			);
+		case FriendStatus.OFFLINE:
+		case FriendStatus.SENT:
+			return (
+				<div className={tw`w-full inline-flex justify-between`}>
+					<span>
+						{props.friend.username}
+					</span>
+					<span className={tw`text-gray-500`}>
+						{FriendStatus[props.friend.status.type]}
+					</span>
+				</div>
+			);
+	}
 }

@@ -32,7 +32,9 @@ export const reset = async () => {
 		username: null,
 		friends: [],
 		dialogs: new Map(),
+		connecteds: new Set(),
 	};
+
 	if (clientState) {
 		clientState.tcpC2SConnection.disconnect();
 		for (const conn of clientState.tcpP2PConnections.values()) {

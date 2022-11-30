@@ -112,6 +112,17 @@ serveWS(wsC2SServer, (socket) => {
 		if (friend.status.type != FriendStatus.ONLINE) {
 			throw "Your friend is not online";
 		}
+
+		// if there is already a tcp p2p connection,
+		// reuse it
+		if (clientState.tcpP2PConnections.has(act.username)) {
+			clientState.wsC2SConnection!.send({
+				type: ResultType.CONNECT,
+				username: friend.username,
+			});
+			return;
+		}
+
 		const tcpP2PConnection = new TCPMessageMessage(
 			await Deno.connect({
 				hostname: friend.status.ip == "0.0.0.0"
@@ -122,6 +133,7 @@ serveWS(wsC2SServer, (socket) => {
 			"tcp p2p to " + friend.username,
 		);
 		clientState.tcpP2PConnections.set(act.username, tcpP2PConnection);
+		guiState.connecteds.add(friend.username);
 		tcpP2PConnection.send({
 			type: MessageType.HELLO,
 			username: guiState.username!,
@@ -129,9 +141,6 @@ serveWS(wsC2SServer, (socket) => {
 		clientState.wsC2SConnection!.send({
 			type: ResultType.CONNECT,
 			username: friend.username,
-		});
-		tcpP2PConnection.onDisconnect(() => {
-			clientState.tcpP2PConnections.delete(act.username);
 		});
 	});
 
