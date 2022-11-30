@@ -57,8 +57,8 @@ export abstract class Encoder<T> {
 		this.writer.write(new Uint8Array(arr));
 	}
 	fourBytes(m: number) {
-		if (m >= Math.pow(2, 16)) {
-			throw Error(`num bigger than 2 bytes: ${m}`);
+		if (m >= Math.pow(2, 32)) {
+			throw Error(`num bigger than 4 bytes: ${m}`);
 		}
 		const arr = new ArrayBuffer(4);
 		new DataView(arr).setUint32(0, m);
