@@ -52,9 +52,9 @@ wsC2SConnection.on("SYNC", (res) => {
 					username: username,
 				});
 			}
-			// setInterval(() => {
-			// 	wsC2SConnection.send({ type: ActionType.SYNC });
-			// }, 5000);
+			setInterval(() => {
+				wsC2SConnection.send({ type: ActionType.SYNC });
+			}, 1000);
 		}
 		initializing.value = false;
 	});
@@ -94,7 +94,3 @@ effect(() => {
 	}
 	prevConnecteds = new Set(state.connecteds.value);
 });
-
-// files
-
-export const files: File[] = [];

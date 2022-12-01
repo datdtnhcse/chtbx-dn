@@ -8,7 +8,7 @@ import {
 	Friend,
 	FriendStatus,
 } from "../protocol/request_response.ts";
-import { files, state, wsC2SConnection, wsP2PConnections } from "./state.ts";
+import { state, wsC2SConnection, wsP2PConnections } from "./state.ts";
 
 export default function Dash() {
 	useSignalEffect(() => {
@@ -161,6 +161,18 @@ function Dialog(props: { username: string }) {
 	);
 }
 
+function formatBytes(bytes: number, decimals = 2) {
+	if (!+bytes) return "0 Bytes";
+
+	const k = 1024;
+	const dm = decimals < 0 ? 0 : decimals;
+	const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+	const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+	return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
 function DialogSend() {
 	const filePath = useSignal("");
 	const file = useSignal<File | null>(null);
@@ -168,36 +180,60 @@ function DialogSend() {
 	const { username } = useContext(DialogContext)!;
 	const controller = useSignal(new AbortController());
 
-	const sendMessage = () => {
+	const sendMessage = async () => {
 		if (inputMessage.value != "" || file.value === null) {
-			wsP2PConnections.get(username)!.send({
+			await wsP2PConnections.get(username)!.send({
 				type: ActionType.SEND_MESSAGE,
 				content: inputMessage.value,
 			});
 			inputMessage.value = "";
 		}
-		if (file.value !== null) {
-			files.push(file.value);
-			wsP2PConnections.get(username)!.send({
+		if (filePath.value) {
+			await wsP2PConnections.get(username)!.send({
+				type: ActionType.SEND_MESSAGE,
+				content: `đã gửi file ${file.value!.name} (${
+					formatBytes(file.value!.size)
+				})`,
+			});
+			await wsP2PConnections.get(username)!.send({
 				type: ActionType.FILE_OFFER,
-				name: file.value.name,
-				size: file.value.size,
+				name: file.value!.name,
+				size: file.value!.size,
 			});
 			controller.value.abort();
 			controller.value = new AbortController();
-			wsP2PConnections.get(username)!.on("FILE_REQUEST", () => {
-				console.log("callback");
+			wsP2PConnections.get(username)!.on("FILE_REQUEST", async () => {
+				const reader = file.value?.stream().getReader()!;
+				while (true) {
+					const { value, done } = await reader.read();
+					if (done) return;
+					await wsP2PConnections.get(username)?.send({
+						type: ActionType.FILE_SEND,
+						chunk: value,
+					});
+				}
 			}, { signal: controller.value.signal });
 			filePath.value = "";
 		}
 	};
 
-	const download = () => {
+	const download = async () => {
 		wsP2PConnections.get(username)!.send({ type: ActionType.FILE_REQUEST });
+		await wsP2PConnections.get(username)!.wait("FILE_REQUEST");
+		alert("file download successfully");
 	};
 
 	return (
-		<div className={tw`flex flex-col mt-4`}>
+		<div className={tw`border-t pt-2 flex flex-col mt-4`}>
+			{state.offeredFile.value && (
+				<button
+					onClick={download}
+					disabled={!state.connecteds.value.has(username)}
+					className={tw`w-full text-center overflow-ellipsis overflow-hidden disabled:(bg-gray-100 text-gray-500 cursor-not-allowed)`}
+				>
+					🔽 Tải xuống: {state.offeredFile.value.name}
+				</button>
+			)}
 			<form
 				className={tw`flex`}
 				onSubmit={(e) => {
@@ -210,7 +246,7 @@ function DialogSend() {
 					value={inputMessage.value}
 					onInput={(e) => inputMessage.value = e.currentTarget.value}
 					disabled={!state.connecteds.value.has(username)}
-					className={tw`w-full py-1 px-2 bg-yellow-100 rounded-md disabled:(bg-gray-100 cursor-not-allowed)`}
+					className={tw`mt-2 w-full py-1 px-2 bg-yellow-100 rounded-md disabled:(bg-gray-100 cursor-not-allowed)`}
 				/>
 				<button
 					disabled={!state.connecteds.value.has(username)}
@@ -227,13 +263,14 @@ function DialogSend() {
 						filePath.value = e.currentTarget.value;
 						file.value = e.currentTarget.files?.[0] ?? null;
 					}}
+					disabled={!state.connecteds.value.has(username)}
+					className={tw`mt-2 w-full overflow-ellipsis block file-selector-button::(
+						px-2 py-1
+						font-body font-bold rounded-md bg-yellow-100 text-yellow-900 border-none
+						hover:cursor-pointer
+					) disabled:(file-selector-button::(bg-gray-100 text-gray-500 cursor-not-allowed))`}
 				/>
 			</div>
-			{state.offeredFile.value && (
-				<button onClick={download}>
-					{state.offeredFile.value.name}
-				</button>
-			)}
 		</div>
 	);
 }

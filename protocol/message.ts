@@ -45,16 +45,8 @@ export type FileRequestMessage = {
 
 export type FileSendMessage = {
 	type: MessageType.FILE_SEND;
-	status: {
-		type: FileStatus.OK;
-		size: number;
-		// content is streamed after this
-	} | { type: FileStatus.FILE_NOT_AVAILABLE };
+	chunk: Uint8Array;
 };
-export enum FileStatus {
-	OK = 0,
-	FILE_NOT_AVAILABLE = 1,
-}
 
 export type HelloMessage = {
 	type: MessageType.HELLO;

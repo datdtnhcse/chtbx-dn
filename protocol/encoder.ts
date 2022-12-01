@@ -5,7 +5,6 @@ import {
 	FileRequestMessage,
 	FileRevokeMessage,
 	FileSendMessage,
-	FileStatus,
 	HelloMessage,
 	Message,
 	MessageType,
@@ -35,48 +34,48 @@ export abstract class Encoder<T> {
 		);
 	}
 
-	ip(ip: string) {
+	async ip(ip: string) {
 		const parts = ip.split(".").map(Number);
 		if (parts.some((part) => isNaN(part) || part > 255)) {
 			throw new Error(`invalid ip format: ${ip}`);
 		}
-		this.writer.write(new Uint8Array(parts));
+		await this.writer.write(new Uint8Array(parts));
 	}
 
-	byte(i: number) {
+	async byte(i: number) {
 		if (i >= Math.pow(2, 8)) {
 			throw Error(`num bigger than 1 bytes: ${i}`);
 		}
-		this.writer.write(new Uint8Array([i]));
+		await this.writer.write(new Uint8Array([i]));
 	}
-	twoBytes(m: number) {
+	async twoBytes(m: number) {
 		if (m >= Math.pow(2, 16)) {
 			throw Error(`num bigger than 2 bytes: ${m}`);
 		}
 		const arr = new ArrayBuffer(2);
 		new DataView(arr).setUint16(0, m);
-		this.writer.write(new Uint8Array(arr));
+		await this.writer.write(new Uint8Array(arr));
 	}
-	fourBytes(m: number) {
+	async fourBytes(m: number) {
 		if (m >= Math.pow(2, 32)) {
 			throw Error(`num bigger than 4 bytes: ${m}`);
 		}
 		const arr = new ArrayBuffer(4);
 		new DataView(arr).setUint32(0, m);
-		this.writer.write(new Uint8Array(arr));
+		await this.writer.write(new Uint8Array(arr));
 	}
 
-	lengthStr(s: string) {
+	async lengthStr(s: string) {
 		if (s.length > 255) {
 			throw Error(`string has more than 255 byte: ${s}`);
 		}
-		this.writer.write(
+		await this.writer.write(
 			new Uint8Array([s.length, ...new TextEncoder().encode(s)]),
 		);
 	}
 
-	nullStr(s: string) {
-		this.writer.write(
+	async nullStr(s: string) {
+		await this.writer.write(
 			new Uint8Array([...new TextEncoder().encode(s), 0]),
 		);
 	}
@@ -84,134 +83,130 @@ export abstract class Encoder<T> {
 }
 
 export class RequestEncoder extends Encoder<Request> {
-	encode(req: Request): void {
-		if (req.type === RequestType.LOGIN) {
-			return this.login(req);
-		}
-		if (req.type === RequestType.REGISTER) {
-			return this.register(req);
-		}
-		if (req.type === RequestType.FRIEND_LIST) {
-			return this.friendList(req);
-		}
-		if (req.type === RequestType.ADD_FRIEND) {
-			return this.addFriend(req);
+	async encode(req: Request) {
+		switch (req.type) {
+			case RequestType.LOGIN:
+				return await this.login(req);
+			case RequestType.REGISTER:
+				return await this.register(req);
+			case RequestType.FRIEND_LIST:
+				return await this.friendList(req);
+			case RequestType.ADD_FRIEND:
+				return await this.addFriend(req);
+				// default:
+				// 	throw `unreachable req type ${req.type}`;
 		}
 	}
-	login(req: LoginRequest) {
-		this.byte(RequestType.LOGIN);
-		this.lengthStr(req.username);
-		this.lengthStr(req.password);
-		this.ip(req.ip);
-		this.twoBytes(req.port);
-		this.writer.flush();
+	async login(req: LoginRequest) {
+		await this.byte(RequestType.LOGIN);
+		await this.lengthStr(req.username);
+		await this.lengthStr(req.password);
+		await this.ip(req.ip);
+		await this.twoBytes(req.port);
+		await this.writer.flush();
 	}
-	register(req: RegisterRequest) {
-		this.byte(RequestType.REGISTER);
-		this.lengthStr(req.username);
-		this.lengthStr(req.password);
-		this.writer.flush();
+	async register(req: RegisterRequest) {
+		await this.byte(RequestType.REGISTER);
+		await this.lengthStr(req.username);
+		await this.lengthStr(req.password);
+		await this.writer.flush();
 	}
-	addFriend(req: AddFriendRequest) {
-		this.byte(RequestType.ADD_FRIEND);
-		this.lengthStr(req.username);
-		this.writer.flush();
+	async addFriend(req: AddFriendRequest) {
+		await this.byte(RequestType.ADD_FRIEND);
+		await this.lengthStr(req.username);
+		await this.writer.flush();
 	}
-	friendList(_: FriendListRequest) {
-		this.byte(RequestType.FRIEND_LIST);
-		this.writer.flush();
+	async friendList(_: FriendListRequest) {
+		await this.byte(RequestType.FRIEND_LIST);
+		await this.writer.flush();
 	}
 }
 
 export class ResponseEncoder extends Encoder<Response> {
-	encode(res: Response): void {
-		if (res.type === ResponseType.LOGIN) {
-			return this.login(res);
-		}
-		if (res.type === ResponseType.REGISTER) {
-			return this.register(res);
-		}
-		if (res.type === ResponseType.FRIEND_LIST) {
-			return this.friendList(res);
-		}
-		if (res.type === ResponseType.ADD_FRIEND) {
-			return this.addFriend(res);
+	async encode(res: Response) {
+		switch (res.type) {
+			case ResponseType.LOGIN:
+				return await this.login(res);
+			case ResponseType.REGISTER:
+				return await this.register(res);
+			case ResponseType.FRIEND_LIST:
+				return await this.friendList(res);
+			case ResponseType.ADD_FRIEND:
+				return await this.addFriend(res);
 		}
 	}
-	login(res: LoginResponse) {
-		this.byte(ResponseType.LOGIN);
-		this.byte(res.status);
-		this.writer.flush();
+	async login(res: LoginResponse) {
+		await this.byte(ResponseType.LOGIN);
+		await this.byte(res.status);
+		await this.writer.flush();
 	}
-	register(res: RegisterResponse) {
-		this.byte(ResponseType.REGISTER);
-		this.byte(res.status);
-		this.writer.flush();
+	async register(res: RegisterResponse) {
+		await this.byte(ResponseType.REGISTER);
+		await this.byte(res.status);
+		await this.writer.flush();
 	}
-	addFriend(res: AddFriendResponse) {
-		this.byte(ResponseType.ADD_FRIEND);
-		this.byte(res.status);
-		this.writer.flush();
+	async addFriend(res: AddFriendResponse) {
+		await this.byte(ResponseType.ADD_FRIEND);
+		await this.byte(res.status);
+		await this.writer.flush();
 	}
-	friendList(res: FriendListResponse) {
-		this.byte(ResponseType.FRIEND_LIST);
-		this.twoBytes(res.friends.length);
+	async friendList(res: FriendListResponse) {
+		await this.byte(ResponseType.FRIEND_LIST);
+		await this.twoBytes(res.friends.length);
 		for (const friend of res.friends) {
-			this.lengthStr(friend.username);
-			this.byte(friend.status.type);
+			await this.lengthStr(friend.username);
+			await this.byte(friend.status.type);
 			if (friend.status.type == FriendStatus.ONLINE) {
-				this.ip(friend.status.ip);
-				this.twoBytes(friend.status.port);
+				await this.ip(friend.status.ip);
+				await this.twoBytes(friend.status.port);
 			}
 		}
-		this.writer.flush();
+		await this.writer.flush();
 	}
 }
 
 export class MessageEncoder extends Encoder<Message> {
-	encode(msg: Message): void {
+	async encode(msg: Message) {
 		this.byte(msg.type);
 		switch (msg.type) {
 			case MessageType.SEND_MESSAGE:
-				return this.sendMessage(msg);
+				return await this.sendMessage(msg);
 			case MessageType.HELLO:
-				return this.hello(msg);
+				return await this.hello(msg);
 			case MessageType.FILE_OFFER:
-				return this.fileOffer(msg);
+				return await this.fileOffer(msg);
 			case MessageType.FILE_REQUEST:
-				return this.fileRequest(msg);
+				return await this.fileRequest(msg);
 			case MessageType.FILE_SEND:
-				return this.fileSend(msg);
+				return await this.fileSend(msg);
 			case MessageType.FILE_REVOKE:
-				return this.fileRevoke(msg);
+				return await this.fileRevoke(msg);
 			default:
 				throw "unimplemented";
 		}
 	}
-	sendMessage(msg: SendMessageMessage) {
-		this.nullStr(msg.content);
-		this.writer.flush();
+	async sendMessage(msg: SendMessageMessage) {
+		await this.nullStr(msg.content);
+		await this.writer.flush();
 	}
-	hello(msg: HelloMessage) {
-		this.lengthStr(msg.username);
-		this.writer.flush();
+	async hello(msg: HelloMessage) {
+		await this.lengthStr(msg.username);
+		await this.writer.flush();
 	}
-	fileOffer(msg: FileOfferMessage) {
-		this.nullStr(msg.name);
-		this.fourBytes(msg.size);
-		this.writer.flush();
+	async fileOffer(msg: FileOfferMessage) {
+		await this.nullStr(msg.name);
+		await this.fourBytes(msg.size);
+		await this.writer.flush();
 	}
-	fileRequest(_: FileRequestMessage) {
-		this.writer.flush();
+	async fileRequest(_: FileRequestMessage) {
+		await this.writer.flush();
 	}
-	fileRevoke(_: FileRevokeMessage) {
-		this.writer.flush();
+	async fileRevoke(_: FileRevokeMessage) {
+		await this.writer.flush();
 	}
-	fileSend(msg: FileSendMessage) {
-		this.byte(msg.status.type);
-		if (msg.status.type === FileStatus.OK) {
-			this.fourBytes(msg.status.size);
-		}
-		this.writer.flush();
+	async fileSend(msg: FileSendMessage) {
+		await this.fourBytes(msg.chunk.byteLength);
+		await this.writer.write(msg.chunk);
+		await this.writer.flush();
 	}
 }

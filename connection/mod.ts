@@ -96,9 +96,9 @@ export class TCPConnection<SendMap, ReceiveMap>
 		this.listen();
 	}
 
-	send(data: SendMap[keyof SendMap]) {
+	async send(data: SendMap[keyof SendMap]) {
 		console.log(this.label, "sent", this.sendKey(data), data);
-		this.encoder.encode(data);
+		await this.encoder.encode(data);
 	}
 
 	protected async listen() {

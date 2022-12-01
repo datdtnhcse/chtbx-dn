@@ -18,7 +18,8 @@ export type Action =
 	| MessageAction
 	| AddFriendAction
 	| FileOfferAction
-	| FileRequestAction;
+	| FileRequestAction
+	| FileSendAction;
 export type Result =
 	| LoginResult
 	| RegisterResult
@@ -27,7 +28,8 @@ export type Result =
 	| HelloResult
 	| MessageResult
 	| AddFriendResult
-	| FileRequestResult;
+	| FileRequestResult
+	| FileSendResult;
 
 export enum ActionType {
 	REGISTER = 0,
@@ -40,6 +42,7 @@ export enum ActionType {
 	LOGOUT = 7,
 	FILE_OFFER = 8,
 	FILE_REQUEST = 9,
+	FILE_SEND = 10,
 }
 export enum ResultType {
 	REGISTER = 0,
@@ -50,6 +53,7 @@ export enum ResultType {
 	SEND_MESSAGE = 5,
 	ADD_FRIEND = 6,
 	FILE_REQUEST = 7,
+	FILE_SEND = 8,
 }
 export type ActionMap = {
 	[K in keyof typeof ActionType]: Action & { //
@@ -151,4 +155,13 @@ export type FileRequestAction = {
 
 export type FileRequestResult = {
 	type: ResultType.FILE_REQUEST;
+};
+
+export type FileSendAction = {
+	type: ActionType.FILE_SEND;
+	chunk: Uint8Array;
+};
+
+export type FileSendResult = {
+	type: ResultType.FILE_SEND;
 };

@@ -5,7 +5,6 @@ import {
 	FileRequestMessage,
 	FileRevokeMessage,
 	FileSendMessage,
-	FileStatus,
 	HelloMessage,
 	Message,
 	MessageType,
@@ -247,22 +246,13 @@ export class MessageDecoder extends Decoder<Message> {
 	}
 
 	async fileSend(): Promise<FileSendMessage> {
-		const status = await this.byte();
-		switch (status) {
-			case FileStatus.OK: {
-				const size = await this.fourBytes();
-				return {
-					type: MessageType.FILE_SEND,
-					status: { type: FileStatus.OK, size },
-				};
-			}
-			case FileStatus.FILE_NOT_AVAILABLE:
-				return {
-					type: MessageType.FILE_SEND,
-					status: { type: FileStatus.FILE_NOT_AVAILABLE },
-				};
-			default:
-				throw new Error(`unreachable file status: ${status}`);
-		}
+		const size = await this.fourBytes();
+		const chunk = new Uint8Array(size);
+		const ok = await this.reader.readFull(chunk);
+		if (!ok) throw "EOF";
+		return {
+			type: MessageType.FILE_SEND,
+			chunk,
+		};
 	}
 }

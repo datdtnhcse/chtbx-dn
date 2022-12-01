@@ -71,48 +71,83 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 	const tcpP2PConnection = clientState.tcpP2PConnections.get(act.username);
 	console.log("resolved friend connection");
 
-	wsP2PConnection.on("SEND_MESSAGE", (msg) => {
+	wsP2PConnection.on("SEND_MESSAGE", async (msg) => {
 		guiState.dialogs.get(act.username)!.push({
 			type: "content",
 			author: guiState.username!,
 			content: msg.content,
 		});
-		clientState.wsC2SConnection!.send({
+		await clientState.wsC2SConnection!.send({
 			type: ResultType.SYNC,
 			state: guiState,
 		});
-		tcpP2PConnection!.send({
+		await tcpP2PConnection!.send({
 			type: MessageType.SEND_MESSAGE,
 			content: msg.content,
 		});
 	});
 
 	let controller = new AbortController();
-	wsP2PConnection.on("FILE_OFFER", (msg) => {
-		tcpP2PConnection!.send({
+	wsP2PConnection.on("FILE_OFFER", async (msg) => {
+		await tcpP2PConnection!.send({
 			type: MessageType.FILE_OFFER,
 			name: msg.name,
 			size: msg.size,
 		});
 		controller.abort();
 		controller = new AbortController();
-		tcpP2PConnection!.on("FILE_REQUEST", () => {
+		tcpP2PConnection!.on("FILE_REQUEST", async () => {
 			// requestee must be present not to revoke the file
-			wsP2PConnection.send({
+			await wsP2PConnection.send({
 				type: ResultType.FILE_REQUEST,
 			});
 		}, { signal: controller.signal });
 	});
 
-	wsP2PConnection.on("FILE_REQUEST", () => {
-		tcpP2PConnection!.send({ type: MessageType.FILE_REQUEST });
+	wsP2PConnection.on("FILE_REQUEST", async () => {
+		const file = guiState.offeredFile!;
+
+		await tcpP2PConnection!.send({ type: MessageType.FILE_REQUEST });
+
+		const fsFile = await Deno.open("downloads/" + file.name, {
+			write: true,
+			truncate: true,
+			create: true,
+		});
+		let total = 0;
+		while (true) {
+			const msg = await tcpP2PConnection!.wait("FILE_SEND");
+			total += msg.chunk.byteLength;
+			let bytesWritten = 0;
+			while (true) {
+				bytesWritten = await fsFile.write(
+					msg.chunk.slice(bytesWritten),
+				);
+				if (bytesWritten == 0) {
+					break;
+				}
+			}
+			if (total === file.size) {
+				await wsP2PConnection.send({ type: ResultType.FILE_SEND });
+				break;
+			}
+		}
 	});
 
-	wsP2PConnection.onDisconnect(() => {
-		tcpP2PConnection?.send({ type: MessageType.FILE_REVOKE });
+	wsP2PConnection.on("FILE_SEND", async (act) => {
+		await tcpP2PConnection!.send({
+			type: MessageType.FILE_SEND,
+			chunk: act.chunk,
+		});
+	});
+
+	wsP2PConnection.onDisconnect(async () => {
+		controller.abort();
+		await tcpP2PConnection?.send({ type: MessageType.FILE_REVOKE });
 	});
 
 	tcpP2PConnection!.onDisconnect(() => {
+		controller.abort();
 		wsP2PConnection.disconnect();
 	}, { signal: wsP2PConnection.controller.signal });
 });
