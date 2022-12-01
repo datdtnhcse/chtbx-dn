@@ -30,6 +30,7 @@ export const state: SignalState = {
 	friends: signal([]),
 	dialogs: signal(new Map()),
 	connecteds: signal(new Set()),
+	offeredFile: signal(null),
 };
 
 // initial sync

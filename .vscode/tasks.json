@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "deno",
+			"command": "",
+			"problemMatcher": [
+				"$deno"
+			],
+			"label": "deno task: client1",
+			"detail": "CLIENT_NO=0 deno task client"
+		},
+		{
+			"type": "deno",
+			"command": "",
+			"problemMatcher": [
+				"$deno"
+			],
+			"label": "deno task: client2",
+			"detail": "CLIENT_NO=1 deno task client"
+		}
+	]
+}

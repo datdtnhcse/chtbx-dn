@@ -8,6 +8,7 @@ import {
 	LoginStatus,
 	RequestType,
 } from "../protocol/request_response.ts";
+import { setupTCPP2PConnection } from "./peer_to_peer.ts";
 import { clientState, guiState, reset, wsC2SServer } from "./state.ts";
 
 serveWS(wsC2SServer, (socket) => {
@@ -110,7 +111,15 @@ serveWS(wsC2SServer, (socket) => {
 		if (!friend) throw "no friend with that username exist";
 
 		if (friend.status.type != FriendStatus.ONLINE) {
-			throw "Your friend is not online";
+			console.log(
+				`Your friend is not online: ${
+					FriendStatus[friend.status.type]
+				}`,
+			);
+			guiState.connecteds.delete(friend.username);
+			clientState.tcpP2PConnections.get(friend.username)?.disconnect();
+			clientState.tcpP2PConnections.delete(friend.username);
+			return;
 		}
 
 		// if there is already a tcp p2p connection,
@@ -134,14 +143,15 @@ serveWS(wsC2SServer, (socket) => {
 		);
 		clientState.tcpP2PConnections.set(act.username, tcpP2PConnection);
 		guiState.connecteds.add(friend.username);
-		tcpP2PConnection.send({
-			type: MessageType.HELLO,
-			username: guiState.username!,
-		});
 		clientState.wsC2SConnection!.send({
 			type: ResultType.CONNECT,
 			username: friend.username,
 		});
+		tcpP2PConnection.send({
+			type: MessageType.HELLO,
+			username: guiState.username!,
+		});
+		setupTCPP2PConnection(tcpP2PConnection, friend.username);
 	});
 
 	clientState.wsC2SConnection.onDisconnect(() => {

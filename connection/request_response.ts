@@ -6,7 +6,7 @@ import {
 	responseKey,
 	ResponseMap,
 } from "../protocol/request_response.ts";
-import { TCPConnection } from "./mod.ts";
+import { TCPConnection } from "./tcp.ts";
 
 export class TCPRequestResponse extends TCPConnection<RequestMap, ResponseMap> {
 	constructor(

@@ -1,0 +1,23 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"request": "launch",
+			"name": "Launch Program",
+			"type": "node",
+			"program": "${workspaceFolder}/client/main.ts",
+			"cwd": "${workspaceFolder}",
+			"runtimeExecutable": "/home/dykhng/.deno/bin/deno",
+			"runtimeArgs": [
+				"run",
+				"--inspect",
+				"--allow-all"
+			],
+			"envFile": "${workspaceFolder}/.env.client0",
+			"attachSimplePort": 9229
+		}
+	]
+}

@@ -1,6 +1,11 @@
+import { Mutex } from "https://deno.land/x/semaphore@v1.1.2/mod.ts";
 import { BufReader } from "std/io/buffer.ts";
 import { readerFromStreamReader } from "std/streams/conversion.ts";
 import {
+	FileOfferMessage,
+	FileRequestMessage,
+	FileRevokeMessage,
+	FileSendMessage,
 	HelloMessage,
 	Message,
 	MessageType,
@@ -25,6 +30,7 @@ import {
 
 export abstract class Decoder<T> {
 	reader: BufReader;
+	mutex: Mutex = new Mutex();
 	constructor(conn: Deno.Conn) {
 		this.reader = BufReader.create(
 			readerFromStreamReader(conn.readable.getReader()),
@@ -38,8 +44,13 @@ export abstract class Decoder<T> {
 	}
 
 	async twoBytes() {
-		return (await this.byte()) * Math.pow(2, 8) +
-			await this.byte();
+		return (await this.byte()) * Math.pow(2, 8) + (await this.byte());
+	}
+
+	async fourBytes() {
+		return (await this.byte()) * Math.pow(2, 24) +
+			(await this.byte()) * Math.pow(2, 16) +
+			(await this.byte()) * Math.pow(2, 8) + await this.byte();
 	}
 
 	async ip() {
@@ -64,11 +75,19 @@ export abstract class Decoder<T> {
 		return (await this.reader.readString("\0"))!.slice(0, -1);
 	}
 
-	abstract decode(): Promise<T>;
+	async decode() {
+		const release = await this.mutex.acquire();
+		try {
+			return await this.decodeBody();
+		} finally {
+			release();
+		}
+	}
+	protected abstract decodeBody(): Promise<T>;
 }
 
 export class RequestDecoder extends Decoder<Request> {
-	async decode(): Promise<Request> {
+	async decodeBody(): Promise<Request> {
 		const type = await this.byte();
 		switch (type) {
 			case RequestType.LOGIN:
@@ -109,7 +128,7 @@ export class RequestDecoder extends Decoder<Request> {
 }
 
 export class ResponseDecoder extends Decoder<Response> {
-	async decode(): Promise<Response> {
+	async decodeBody(): Promise<Response> {
 		const type = await this.byte();
 
 		switch (type) {
@@ -185,7 +204,7 @@ export class ResponseDecoder extends Decoder<Response> {
 }
 
 export class MessageDecoder extends Decoder<Message> {
-	async decode(): Promise<Message> {
+	async decodeBody(): Promise<Message> {
 		const type = await this.byte();
 
 		switch (type) {
@@ -193,9 +212,17 @@ export class MessageDecoder extends Decoder<Message> {
 				return this.sendMessage();
 			case MessageType.HELLO:
 				return this.hello();
+			case MessageType.FILE_OFFER:
+				return this.fileOffer();
+			case MessageType.FILE_REQUEST:
+				return this.fileRequest();
+			case MessageType.FILE_SEND:
+				return this.fileSend();
+			case MessageType.FILE_REVOKE:
+				return this.fileRevoke();
+			default:
+				throw new Error(`unreachable type: ${type}`);
 		}
-
-		throw new Error(`unreachable type: ${type}`);
 	}
 	async sendMessage(): Promise<SendMessageMessage> {
 		const content = await this.nullStr();
@@ -204,5 +231,34 @@ export class MessageDecoder extends Decoder<Message> {
 	async hello(): Promise<HelloMessage> {
 		const username = await this.lenStr();
 		return { type: MessageType.HELLO, username };
+	}
+
+	async fileOffer(): Promise<FileOfferMessage> {
+		const name = await this.nullStr();
+		const size = await this.fourBytes();
+		return {
+			type: MessageType.FILE_OFFER,
+			name,
+			size,
+		};
+	}
+
+	fileRevoke(): FileRevokeMessage {
+		return { type: MessageType.FILE_REVOKE };
+	}
+
+	fileRequest(): FileRequestMessage {
+		return { type: MessageType.FILE_REQUEST };
+	}
+
+	async fileSend(): Promise<FileSendMessage> {
+		const size = await this.fourBytes();
+		const chunk = new Uint8Array(size);
+		const ok = await this.reader.readFull(chunk);
+		if (!ok) throw "EOF";
+		return {
+			type: MessageType.FILE_SEND,
+			chunk,
+		};
 	}
 }
