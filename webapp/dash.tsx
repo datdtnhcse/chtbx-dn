@@ -203,14 +203,22 @@ function DialogSend() {
 			controller.value.abort();
 			controller.value = new AbortController();
 			wsP2PConnections.get(username)!.on("FILE_REQUEST", async () => {
-				const reader = file.value?.stream().getReader()!;
+				const reader = file.value?.stream().getReader({
+					// mode: "byob",
+				})!;
 				while (true) {
-					const { value, done } = await reader.read();
-					if (done) return;
+					// const buffer = new ArrayBuffer(4096);
+					const { value, done } = await reader.read(
+						// new Uint8Array(buffer),
+					);
+					if (!value) {
+						throw "file closed";
+					}
 					await wsP2PConnections.get(username)?.send({
 						type: ActionType.FILE_SEND,
 						chunk: value,
 					});
+					if (done) return;
 				}
 			}, { signal: controller.value.signal });
 			filePath.value = "";

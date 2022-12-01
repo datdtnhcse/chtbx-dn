@@ -115,8 +115,8 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 			create: true,
 		});
 		let total = 0;
-		while (true) {
-			const msg = await tcpP2PConnection!.wait("FILE_SEND");
+		const controller = new AbortController();
+		tcpP2PConnection!.on("FILE_SEND", async (msg) => {
 			total += msg.chunk.byteLength;
 			let bytesWritten = 0;
 			while (true) {
@@ -128,10 +128,12 @@ serveWS(wsP2PServer, async (socket: WebSocket) => {
 				}
 			}
 			if (total === file.size) {
-				await wsP2PConnection.send({ type: ResultType.FILE_SEND });
-				break;
+				await wsP2PConnection.send({
+					type: ResultType.FILE_REQUEST,
+				});
+				controller.abort();
 			}
-		}
+		}, { signal: controller.signal });
 	});
 
 	wsP2PConnection.on("FILE_SEND", async (act) => {

@@ -1,3 +1,4 @@
+import { Mutex } from "https://deno.land/x/semaphore@v1.1.2/mod.ts";
 import { BufWriter } from "std/io/buffer.ts";
 import { writerFromStreamWriter } from "std/streams/conversion.ts";
 import {
@@ -28,6 +29,7 @@ import {
 
 export abstract class Encoder<T> {
 	writer: BufWriter;
+	mutex = new Mutex();
 	constructor(conn: Deno.Conn) {
 		this.writer = BufWriter.create(
 			writerFromStreamWriter(conn.writable.getWriter()),
@@ -43,26 +45,34 @@ export abstract class Encoder<T> {
 	}
 
 	async byte(i: number) {
-		if (i >= Math.pow(2, 8)) {
+		if (i > 0xff) {
 			throw Error(`num bigger than 1 bytes: ${i}`);
 		}
 		await this.writer.write(new Uint8Array([i]));
 	}
 	async twoBytes(m: number) {
-		if (m >= Math.pow(2, 16)) {
+		if (m > 0xffff) {
 			throw Error(`num bigger than 2 bytes: ${m}`);
 		}
-		const arr = new ArrayBuffer(2);
-		new DataView(arr).setUint16(0, m);
-		await this.writer.write(new Uint8Array(arr));
+		await this.writer.write(
+			new Uint8Array([
+				Math.trunc(m / Math.pow(2, 8)),
+				m % Math.pow(2, 8),
+			]),
+		);
 	}
 	async fourBytes(m: number) {
-		if (m >= Math.pow(2, 32)) {
+		if (m > 0xffffffff) {
 			throw Error(`num bigger than 4 bytes: ${m}`);
 		}
-		const arr = new ArrayBuffer(4);
-		new DataView(arr).setUint32(0, m);
-		await this.writer.write(new Uint8Array(arr));
+		await this.writer.write(
+			new Uint8Array([
+				Math.trunc(m / Math.pow(2, 24)),
+				Math.trunc((m % Math.pow(2, 24)) / Math.pow(2, 16)),
+				Math.trunc((m % Math.pow(2, 16)) / Math.pow(2, 8)),
+				m % Math.pow(2, 8),
+			]),
+		);
 	}
 
 	async lengthStr(s: string) {
@@ -79,11 +89,20 @@ export abstract class Encoder<T> {
 			new Uint8Array([...new TextEncoder().encode(s), 0]),
 		);
 	}
-	abstract encode(t: T): void;
+
+	async encode(t: T) {
+		const release = await this.mutex.acquire();
+		try {
+			return this.encodeBody(t);
+		} finally {
+			release();
+		}
+	}
+	protected abstract encodeBody(t: T): Promise<void>;
 }
 
 export class RequestEncoder extends Encoder<Request> {
-	async encode(req: Request) {
+	async encodeBody(req: Request) {
 		switch (req.type) {
 			case RequestType.LOGIN:
 				return await this.login(req);
@@ -123,7 +142,7 @@ export class RequestEncoder extends Encoder<Request> {
 }
 
 export class ResponseEncoder extends Encoder<Response> {
-	async encode(res: Response) {
+	async encodeBody(res: Response) {
 		switch (res.type) {
 			case ResponseType.LOGIN:
 				return await this.login(res);
@@ -166,7 +185,7 @@ export class ResponseEncoder extends Encoder<Response> {
 }
 
 export class MessageEncoder extends Encoder<Message> {
-	async encode(msg: Message) {
+	async encodeBody(msg: Message) {
 		this.byte(msg.type);
 		switch (msg.type) {
 			case MessageType.SEND_MESSAGE:

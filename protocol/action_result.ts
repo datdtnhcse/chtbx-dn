@@ -28,8 +28,7 @@ export type Result =
 	| HelloResult
 	| MessageResult
 	| AddFriendResult
-	| FileRequestResult
-	| FileSendResult;
+	| FileRequestResult;
 
 export enum ActionType {
 	REGISTER = 0,
@@ -53,7 +52,6 @@ export enum ResultType {
 	SEND_MESSAGE = 5,
 	ADD_FRIEND = 6,
 	FILE_REQUEST = 7,
-	FILE_SEND = 8,
 }
 export type ActionMap = {
 	[K in keyof typeof ActionType]: Action & { //
@@ -160,8 +158,4 @@ export type FileRequestResult = {
 export type FileSendAction = {
 	type: ActionType.FILE_SEND;
 	chunk: Uint8Array;
-};
-
-export type FileSendResult = {
-	type: ResultType.FILE_SEND;
 };

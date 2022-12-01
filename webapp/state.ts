@@ -54,7 +54,7 @@ wsC2SConnection.on("SYNC", (res) => {
 			}
 			setInterval(() => {
 				wsC2SConnection.send({ type: ActionType.SYNC });
-			}, 1000);
+			}, 5000);
 		}
 		initializing.value = false;
 	});

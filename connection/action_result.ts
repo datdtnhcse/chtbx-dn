@@ -7,7 +7,7 @@ import {
 	ResultMap,
 	ResultType,
 } from "../protocol/action_result.ts";
-import { WebSocketConnection } from "./mod.ts";
+import { WebSocketConnection } from "./websocket.ts";
 
 export class WebSocketActionResult
 	extends WebSocketConnection<ActionMap, ResultMap> {
