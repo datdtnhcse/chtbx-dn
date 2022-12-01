@@ -39,7 +39,6 @@ export type LoginRequest = {
 	type: RequestType.LOGIN;
 	username: string;
 	password: string;
-	ip: string;
 	port: number;
 };
 

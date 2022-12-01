@@ -120,7 +120,6 @@ export class RequestEncoder extends Encoder<Request> {
 		await this.byte(RequestType.LOGIN);
 		await this.lengthStr(req.username);
 		await this.lengthStr(req.password);
-		await this.ip(req.ip);
 		await this.twoBytes(req.port);
 		await this.writer.flush();
 	}

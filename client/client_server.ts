@@ -33,7 +33,6 @@ serveWS(wsC2SServer, (socket) => {
 			type: RequestType.LOGIN,
 			username: action.username,
 			password: action.password,
-			ip: clientState.ip,
 			port: clientState.port,
 		});
 

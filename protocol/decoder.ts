@@ -106,9 +106,8 @@ export class RequestDecoder extends Decoder<Request> {
 	async login(): Promise<LoginRequest> {
 		const username = await this.lenStr();
 		const password = await this.lenStr();
-		const ip: string = await this.ip();
 		const port: number = await this.twoBytes();
-		return { type: RequestType.LOGIN, username, password, ip, port };
+		return { type: RequestType.LOGIN, username, password, port };
 	}
 
 	async register(): Promise<RegisterRequest> {

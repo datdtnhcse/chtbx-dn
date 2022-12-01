@@ -26,6 +26,8 @@ const tcpC2SConnection = Deno.listen({
 serveTCP(tcpC2SConnection, (conn) => {
 	// connection state here
 	let id: number | null = null;
+	if (conn.remoteAddr.transport != "tcp") throw "unreachable";
+	const ip = conn.remoteAddr.hostname;
 
 	const clientConnection = new TCPResponseRequest(conn, "tcp");
 
@@ -67,11 +69,10 @@ serveTCP(tcpC2SConnection, (conn) => {
 			"logged in",
 			account.id,
 			request.username,
-			request.ip,
 			request.port,
 		);
 		id = account.id;
-		setIP.first({ id, ip: request.ip, port: request.port });
+		setIP.first({ id, ip, port: request.port });
 		clientConnection.send({
 			type: ResponseType.LOGIN,
 			status: LoginStatus.OK,
